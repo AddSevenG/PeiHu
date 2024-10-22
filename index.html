@@ -91,6 +91,128 @@
             padding: 0 20px;
         }
 
+        .about-section-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            align-items: center;
+        }
+
+        .about-text-content {
+            padding-right: 20px;
+        }
+
+        .highlight-text {
+            font-size: 24px;
+            color: var(--primary-color);
+            font-weight: bold;
+            margin-bottom: 25px;
+            line-height: 1.4;
+            font-family: "Microsoft YaHei", sans-serif;
+            border-left: 4px solid var(--primary-color);
+            padding-left: 15px;
+        }
+
+        .text-block {
+            margin-bottom: 30px;
+            max-width: 600px;
+        }
+
+        .text-block h3 {
+            font-size: 20px;
+            color: var(--secondary-color);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .text-block h3 i {
+            color: var(--primary-color);
+        }
+
+        .text-block p {
+            font-size: 16px;
+            line-height: 1.8;
+            color: #555;
+            margin-bottom: 15px;
+            text-align: justify;
+        }
+
+        .text-block ul {
+            list-style: none;
+            padding-left: 25px;
+        }
+
+        .text-block ul li {
+            position: relative;
+            padding: 8px 0;
+            line-height: 1.6;
+            color: #666;
+        }
+
+        .text-block ul li::before {
+            content: "•";
+            color: var(--primary-color);
+            font-size: 20px;
+            position: absolute;
+            left: -20px;
+            top: 5px;
+        }
+
+        .about-image-slider {
+            position: relative;
+            height: 500px;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .about-image-slider img {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: opacity 0.5s ease;
+            cursor: pointer;
+        }
+
+        @media (max-width: 968px) {
+            .about-section-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .about-text-content {
+                padding-right: 0;
+            }
+            
+            .about-image-slider {
+                height: 400px;
+            }
+        }
+
+        /* 图片切换动画 */
+        @keyframes imageSliderAbout {
+            0% { opacity: 0; }
+            20% { opacity: 1; }
+            33.33% { opacity: 1; }
+            53.33% { opacity: 0; }
+            100% { opacity: 0; }
+        }
+
+        .about-image-slider img {
+            animation: imageSliderAbout 12s infinite;
+            opacity: 0;
+        }
+
+        .about-image-slider img:nth-child(2) {
+            animation-delay: 4s;
+        }
+
+        .about-image-slider img:nth-child(3) {
+            animation-delay: 8s;
+        }
+
         /* Section Styles */
         .section {
             background: var(--white);
@@ -286,7 +408,7 @@
     <header>
         <div class="header-content">
             <div class="logo">
-                <img src="/api/placeholder/50/50" alt="渝适之家Logo">
+                <img src="./img/logo.jpg" alt="渝适之家Logo">
                 <h1>渝适之家 - 关爱老年人</h1>
             </div>
             <nav>
@@ -303,64 +425,159 @@
     <div class="container">
         <section id="about-us" class="section">
             <h2>关于我们</h2>
-            <p>渝适之家是一个专注于中国老年陪护的在线中介平台。我们的宗旨是提供一个安全、温馨、值得信赖的中介平台，帮助老年人获得关爱与陪伴，享受幸福与尊严。</p>
-            <img src="/api/placeholder/1200/400" alt="关于我们" style="width: 100%; height: 400px; object-fit: cover; border-radius: 10px; margin-top: 20px;">
+            <div class="about-section-container">
+                <div class="about-text-content">
+                    <p class="highlight-text">渝适之家——您身边的专业陪护服务平台</p>
+                    
+                    <div class="text-block">
+                        <h3><i class="fas fa-heart"></i> 我们的使命</h3>
+                        <p>渝适之家致力于打造专业可靠的老年人陪护服务中介平台。</p>
+                        <p>我们深知每位老人都值得享受高品质的晚年生活，因此精心搭建这座连接需求与服务的桥梁。</p>
+                    </div>
+                    
+                    <div class="text-block">
+                        <h3><i class="fas fa-handshake"></i> 开放共赢</h3>
+                        <p>我们欢迎各类具备爱心和能力的个人或机构加入平台：</p>
+                        <ul>
+                            <li>专业护理人员可以充分发挥专业特长</li>
+                            <li>有爱心的社会人士能够灵活参与陪护服务</li>
+                            <li>专业机构可以拓展服务渠道</li>
+                        </ul>
+                    </div>
+        
+                    <div class="text-block">
+                        <h3><i class="fas fa-shield-alt"></i> 品质保障</h3>
+                        <p>渝适之家以严格的标准确保服务质量：</p>
+                        <ul>
+                            <li>完善的人员审核机制</li>
+                            <li>专业的技能认证体系</li>
+                            <li>全方位的服务监督制度</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="about-image-slider">
+                    <img src="./img/about1.jpg" alt="关于我们-1">
+                    <img src="./img/about2.jpg" alt="关于我们-2">
+                    <img src="./img/about3.jpg" alt="关于我们-3">
+                </div>
+            </div>
         </section>
 
         <section id="services" class="section">
             <h2>服务概述</h2>
-            <div class="services-grid">
-                <!-- 日常陪伴服务卡片 -->
-                <div class="service-card">
-                    <div class="service-images">
-                        <img src="/api/placeholder/400/250" alt="日常陪伴1">
-                        <img src="/api/placeholder/400/250" alt="日常陪伴2">
-                        <img src="/api/placeholder/400/250" alt="日常陪伴3">
-                    </div>
-                    <div class="service-content">
-                        <h3><i class="fas fa-heart"></i> 日常陪伴</h3>
-                        <p>提供贴心的日常陪伴服务，包括：</p>
-                        <ul>
-                            <li>散步与户外活动陪同</li>
-                            <li>聊天与情感陪护</li>
-                            <li>阅读与娱乐活动</li>
-                        </ul>
+            <div class="services-categories">
+                <!-- 护理工作人员类别 -->
+                <div class="service-category">
+                    <h3 class="category-title">各层护理人员</h3>
+                    <div class="services-grid">
+                        <div class="service-card">
+                            <div class="service-images">
+                                <img src="./img/G1.jpg" alt="高级护理师">
+                                <img src="./img/G2.jpg" alt="高级护理师工作场景">
+                                <img src="./img/G3.jpg" alt="专业照护">
+                            </div>
+                            <div class="service-content">
+                                <h3><i class="fas fa-user-md"></i> 高级护理师</h3>
+                                <p>具备专业医疗护理资质，可提供：</p>
+                                <ul>
+                                    <li>专业医疗护理</li>
+                                    <li>康复训练指导</li>
+                                    <li>健康状况评估</li>
+                                </ul>
+                            </div>
+                        </div>
+        
+                        <div class="service-card">
+                            <div class="service-images">
+                                <img src="./img/Z1.jpg" alt="专业护工">
+                                <img src="./img/Z2.jpg" alt="护工服务场景">
+                                <img src="./img/Z3.jpg" alt="日常护理">
+                            </div>
+                            <div class="service-content">
+                                <h3><i class="fas fa-user-nurse"></i> 专业护工</h3>
+                                <p>经过专业培训的护理人员：</p>
+                                <ul>
+                                    <li>基础医疗护理</li>
+                                    <li>生活起居照料</li>
+                                    <li>专业照护服务</li>
+                                </ul>
+                            </div>
+                        </div>
+        
+                        <div class="service-card">
+                            <div class="service-images">
+                                <img src="./img/R1.jpg" alt="生活护理员">
+                                <img src="./img/R3.jpg" alt="生活照料场景">
+                                <img src="./img/R2.jpg" alt="日常陪护">
+                            </div>
+                            <div class="service-content">
+                                <h3><i class="fas fa-hands-helping"></i> 生活护理员</h3>
+                                <p>具备基础护理技能：</p>
+                                <ul>
+                                    <li>日常生活照料</li>
+                                    <li>基础起居陪护</li>
+                                    <li>简单护理服务</li>
+                                </ul>
+                            </div>
+                        </div>
                     </div>
                 </div>
-
-                <!-- 生活协助服务卡片 -->
-                <div class="service-card">
-                    <div class="service-images">
-                        <img src="/api/placeholder/400/250" alt="生活协助1">
-                        <img src="/api/placeholder/400/250" alt="生活协助2">
-                        <img src="/api/placeholder/400/250" alt="生活协助3">
-                    </div>
-                    <div class="service-content">
-                        <h3><i class="fas fa-home"></i> 生活协助</h3>
-                        <p>全方位的生活照料服务，包括：</p>
-                        <ul>
-                            <li>家务协助</li>
-                            <li>餐食准备</li>
-                            <li>代购服务</li>
-                        </ul>
-                    </div>
-                </div>
-
-                <!-- 医疗护理服务卡片 -->
-                <div class="service-card">
-                    <div class="service-images">
-                        <img src="/api/placeholder/400/250" alt="医疗护理1">
-                        <img src="/api/placeholder/400/250" alt="医疗护理2">
-                        <img src="/api/placeholder/400/250" alt="医疗护理3">
-                    </div>
-                    <div class="service-content">
-                        <h3><i class="fas fa-medkit"></i> 医疗护理</h3>
-                        <p>专业的医疗护理服务，包括：</p>
-                        <ul>
-                            <li>用药提醒与管理</li>
-                            <li>基础健康监测</li>
-                            <li>陪同就医服务</li>
-                        </ul>
+        
+                <!-- 需求陪护类别 -->
+                <div class="service-category">
+                    <h3 class="category-title">陪护服务类型</h3>
+                    <div class="services-grid">
+                        <div class="service-card">
+                            <div class="service-images">
+                                <img src="./img/H.webp" alt="医疗陪护">
+                                <img src="./img/h2.jpg" alt="专业医疗服务">
+                                <img src="./img/h3.webp" alt="康复护理">
+                            </div>
+                            <div class="service-content">
+                                <h3><i class="fas fa-hospital"></i> 医疗陪护</h3>
+                                <p>专业医疗护理服务：</p>
+                                <ul>
+                                    <li>术后康复护理</li>
+                                    <li>慢性病管理</li>
+                                    <li>专业医疗照护</li>
+                                </ul>
+                            </div>
+                        </div>
+        
+                        <div class="service-card">
+                            <div class="service-images">
+                                <img src="./img/Daily1.jpeg" alt="生活陪护">
+                                <img src="./img/daily2.jpeg" alt="日常照料">
+                                <img src="./img/daily3.webp" alt="起居照料">
+                            </div>
+                            <div class="service-content">
+                                <h3><i class="fas fa-home"></i> 生活陪护</h3>
+                                <p>日常生活照料服务：</p>
+                                <ul>
+                                    <li>起居照料</li>
+                                    <li>饮食照护</li>
+                                    <li>环境整理</li>
+                                </ul>
+                            </div>
+                        </div>
+        
+                        <div class="service-card">
+                            <div class="service-images">
+                                <img src="./img/life1.webp" alt="精神陪护">
+                                <img src="./img/life2.webp" alt="情感陪伴">
+                                <img src="./img/life3.webp" alt="社交活动">
+                            </div>
+                            <div class="service-content">
+                                <h3><i class="fas fa-heart"></i> 精神陪护</h3>
+                                <p>情感陪伴与社交服务：</p>
+                                <ul>
+                                    <li>聊天陪伴</li>
+                                    <li>户外活动</li>
+                                    <li>兴趣培养</li>
+                                </ul>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -369,6 +586,7 @@
         <section id="features" class="section">
             <h2>平台特色</h2>
             <div class="features-grid">
+                <!-- 原有特色 -->
                 <div class="feature-item">
                     <i class="fas fa-user-check"></i>
                     <h3>严格筛选</h3>
@@ -389,6 +607,28 @@
                     <h3>24小时响应</h3>
                     <p>全天候客服支持，及时解决问题</p>
                 </div>
+                
+                <!-- 新增特色 -->
+                <div class="feature-item">
+                    <i class="fas fa-calendar-alt"></i>
+                    <h3>灵活参与</h3>
+                    <p>自由选择服务时间，灵活安排陪护工作</p>
+                </div>
+                <div class="feature-item">
+                    <i class="fas fa-robot"></i>
+                    <h3>智能匹配</h3>
+                    <p>基于AI算法，精准匹配最适合的服务人员</p>
+                </div>
+                <div class="feature-item">
+                    <i class="fas fa-users-cog"></i>
+                    <h3>个性化定制</h3>
+                    <p>根据个人需求，定制专属陪护方案</p>
+                </div>
+                <div class="feature-item">
+                    <i class="fas fa-comments"></i>
+                    <h3>社区支持</h3>
+                    <p>在线交流平台，随时沟通解决问题</p>
+                </div>
             </div>
         </section>
 
@@ -397,48 +637,63 @@
             <div class="features-grid">
                 <div class="feature-item">
                     <i class="fas fa-user-friends"></i>
-                    <h3>老年人及家属</h3>
-                    <p>需要专业照护服务的老年人及其家庭成员</p>
+                    <h3>老年人及其家属</h3>
+                    <p>需要专业陪护服务的老年人及其家庭成员，为其提供全方位的照护解决方案</p>
                 </div>
                 <div class="feature-item">
                     <i class="fas fa-user-nurse"></i>
-                    <h3>专业护理人员</h3>
-                    <p>具有专业资质的护工和护理人员</p>
+                    <h3>陪护服务人员</h3>
+                    <p>专业护理人员、持证护工以及有爱心想参与陪护工作的社会人士</p>
                 </div>
                 <div class="feature-item">
                     <i class="fas fa-hospital"></i>
                     <h3>护理机构</h3>
-                    <p>老年护理相关机构和养老院</p>
+                    <p>养老院、康复中心等专业护理机构，助力扩展服务范围</p>
+                </div>
+                <div class="feature-item">
+                    <i class="fas fa-users"></i>
+                    <h3>其他需求群体</h3>
+                    <p>康复患者、特殊人群等需要临时或长期陪护服务的个人或家庭</p>
                 </div>
             </div>
         </section>
 
         <section id="vision" class="section">
             <h2>长期愿景</h2>
-            <div class="feature-item" style="max-width: 800px; margin: 0 auto;">
-                <i class="fas fa-heart" style="font-size: 60px;"></i>
-                <p style="font-size: 18px; margin-top: 20px;">
-                    我们致力于打造中国最优质的老年护理服务平台，通过科技创新和人文关怀，为每一位老年人提供温暖、专业的照护服务。我们期望：
-                </p>
-                <div class="features-grid" style="margin-top: 30px;">
+            <div class="vision-container">
+                <div class="features-grid">
+                    <div class="feature-item">
+                        <i class="fas fa-heart"></i>
+                        <h3>构建关爱社会</h3>
+                        <p>打造一个人人都能参与、人人都受益的互助平台</p>
+                    </div>
                     <div class="feature-item">
                         <i class="fas fa-hands-helping"></i>
-                        <h3>提升服务质量</h3>
-                        <p>不断优化服务标准，提供更优质的护理体验</p>
+                        <h3>便捷参与</h3>
+                        <p>让有意愿的人都能轻松加入陪护服务行列</p>
                     </div>
                     <div class="feature-item">
-                        <i class="fas fa-users"></i>
-                        <h3>扩大服务范围</h3>
-                        <p>让更多老年人享受到专业的照护服务</p>
+                        <i class="fas fa-gem"></i>
+                        <h3>优质选择</h3>
+                        <p>为老年人提供多样化、高品质的陪护服务选项</p>
                     </div>
                     <div class="feature-item">
-                        <i class="fas fa-handshake"></i>
-                        <h3>促进行业发展</h3>
-                        <p>推动养老服务行业的规范化和专业化发展</p>
+                        <i class="fas fa-certificate"></i>
+                        <h3>行业规范</h3>
+                        <p>推动陪护服务行业的职业化、标准化发展</p>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fas fa-shield-alt"></i>
+                        <h3>安全可靠</h3>
+                        <p>建立完善的安全保障体系，打造值得信赖的服务平台</p>
+                    </div>
+                    <div class="feature-item">
+                        <i class="fas fa-comments"></i>
+                        <h3>促进互动</h3>
+                        <p>增进人与人之间的理解与关怀，创造温暖和谐的社会氛围</p>
                     </div>
                 </div>
             </div>
-        </section>
 
         <section id="contact" class="section">
             <h2>联系我们</h2>
@@ -475,7 +730,7 @@
                         <!-- 公众号二维码 -->
                         <div class="qr-code-item" style="text-align: center;">
                             <div class="qr-code-wrapper" style="background: white; padding: 15px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-                                <img src="/api/placeholder/150/150" alt="公众号二维码" style="width: 150px; height: 150px; margin-bottom: 10px;">
+                                <img src="./img/GZH.jpg" alt="公众号二维码" style="width: 150px; height: 150px; margin-bottom: 10px;">
                                 <h4 style="color: var(--primary-color); margin: 10px 0;">关注公众号</h4>
                                 <p style="font-size: 14px; color: #666;">及时获取养老资讯</p>
                                 <p style="font-size: 14px; color: #666;">享受更多专属服务</p>
@@ -537,5 +792,28 @@
         // 图片轮播效果已通过 CSS 动画实现
         // 如需添加更多交互效果，可以在这里扩展 JavaScript 代码
     </script>
+
+<script>
+    // 图片点击切换效果
+    document.querySelector('.about-image-slider').addEventListener('click', function() {
+        const images = this.getElementsByTagName('img');
+        let nextImage = null;
+        
+        for(let i = 0; i < images.length; i++) {
+            if(getComputedStyle(images[i]).opacity > 0) {
+                images[i].style.opacity = 0;
+                nextImage = images[(i + 1) % images.length];
+                break;
+            }
+        }
+        
+        if(nextImage) {
+            nextImage.style.opacity = 1;
+        } else {
+            images[0].style.opacity = 1;
+        }
+    });
+    </script>
+
 </body>
 </html>

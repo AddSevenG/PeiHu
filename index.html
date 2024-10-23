@@ -1,8 +1,10 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
+    
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/x-icon" href="./img/logo.ico">
     <title>渝适之家 - Elderly Care Platform</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
@@ -213,6 +215,19 @@
             animation-delay: 8s;
         }
 
+        .vision-container .features-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px;
+            margin-top: 30px;
+        }
+
+        @media (max-width: 768px) {
+            .vision-container .features-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
         /* Section Styles */
         .section {
             background: var(--white);
@@ -339,6 +354,94 @@
             color: var(--primary-color);
         }
 
+
+        /* 服务类别样式优化 */
+        .service-category {
+            margin-bottom: 40px;
+            background: rgba(255, 152, 0, 0.03);
+            padding: 30px;
+            border-radius: 15px;
+        }
+
+        .category-title {
+            color: var(--primary-color);
+            font-size: 24px;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid var(--primary-color);
+            position: relative;
+        }
+
+        .category-title::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 80px;
+            height: 2px;
+            background: var(--secondary-color);
+        }
+
+        /* 服务内容样式优化 */
+        .service-content {
+            padding: 25px;
+        }
+
+        .service-content h3 {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--primary-color);
+            font-size: 22px;
+            margin-bottom: 20px;
+        }
+
+        .service-content ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .service-content ul li {
+            position: relative;
+            padding: 8px 0 8px 25px;
+            color: #555;
+        }
+
+        .service-content ul li::before {
+            content: "•";
+            color: var(--primary-color);
+            font-size: 20px;
+            position: absolute;
+            left: 0;
+        }
+
+        .service-details {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px dashed #ddd;
+        }
+
+        .service-details h4 {
+            color: var(--secondary-color);
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+
+        .service-tag {
+            display: inline-block;
+            padding: 4px 12px;
+            background: rgba(255, 152, 0, 0.1);
+            border-radius: 15px;
+            margin: 5px;
+            font-size: 14px;
+            color: var(--secondary-color);
+        }
+
+        .service-tag:hover {
+            background: rgba(255, 152, 0, 0.2);
+            transform: translateY(-2px);
+        }
+
         /* Footer */
         footer {
             background: var(--text-color);
@@ -362,6 +465,31 @@
 
             .services-grid {
                 grid-template-columns: 1fr;
+            }
+
+            .dots-container {
+                position: absolute;
+                bottom: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                display: flex;
+                gap: 10px;
+                z-index: 10;
+            }
+
+            .dot {
+                width: 12px;
+                height: 12px;
+                background: rgba(255, 255, 255, 0.5);
+                border: 2px solid #fff;
+                border-radius: 50%;
+                cursor: pointer;
+                transition: all 0.3s ease;
+            }
+
+            .dot.active {
+                background: var(--primary-color);
+                transform: scale(1.2);
             }
 
             .section {
@@ -460,6 +588,11 @@
                     <img src="./img/about1.jpg" alt="关于我们-1">
                     <img src="./img/about2.jpg" alt="关于我们-2">
                     <img src="./img/about3.jpg" alt="关于我们-3">
+                    <div class="dots-container">
+                        <span class="dot"></span>
+                        <span class="dot"></span>
+                        <span class="dot"></span>
+                    </div>
                 </div>
             </div>
         </section>
@@ -471,6 +604,7 @@
                 <div class="service-category">
                     <h3 class="category-title">各层护理人员</h3>
                     <div class="services-grid">
+                        <!-- 高级护理师卡片 -->
                         <div class="service-card">
                             <div class="service-images">
                                 <img src="./img/G1.jpg" alt="高级护理师">
@@ -479,15 +613,43 @@
                             </div>
                             <div class="service-content">
                                 <h3><i class="fas fa-user-md"></i> 高级护理师</h3>
-                                <p>具备专业医疗护理资质，可提供：</p>
-                                <ul>
-                                    <li>专业医疗护理</li>
-                                    <li>康复训练指导</li>
-                                    <li>健康状况评估</li>
-                                </ul>
+                                <p class="service-description">具备专业医疗护理资质的高级护理人员</p>
+                                
+                                <div class="service-details">
+                                    <h4><i class="fas fa-stethoscope"></i> 专业医疗护理</h4>
+                                    <div class="service-tags">
+                                        <span class="service-tag">伤口护理</span>
+                                        <span class="service-tag">静脉输液</span>
+                                        <span class="service-tag">吸痰护理</span>
+                                        <span class="service-tag">管路护理</span>
+                                        <span class="service-tag">造口护理</span>
+                                        <span class="service-tag">气管护理</span>
+                                    </div>
+                                    
+                                    <h4><i class="fas fa-heartbeat"></i> 康复训练</h4>
+                                    <div class="service-tags">
+                                        <span class="service-tag">肢体康复</span>
+                                        <span class="service-tag">术后恢复</span>
+                                        <span class="service-tag">功能训练</span>
+                                        <span class="service-tag">康复指导</span>
+                                        <span class="service-tag">呼吸训练</span>
+                                        <span class="service-tag">运动恢复</span>
+                                    </div>
+                                    
+                                    <h4><i class="fas fa-notes-medical"></i> 健康管理</h4>
+                                    <div class="service-tags">
+                                        <span class="service-tag">健康评估</span>
+                                        <span class="service-tag">用药指导</span>
+                                        <span class="service-tag">营养建议</span>
+                                        <span class="service-tag">健康监测</span>
+                                        <span class="service-tag">并发症预防</span>
+                                        <span class="service-tag">健康教育</span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
         
+                        <!-- 专业护工卡片 -->
                         <div class="service-card">
                             <div class="service-images">
                                 <img src="./img/Z1.jpg" alt="专业护工">
@@ -496,15 +658,42 @@
                             </div>
                             <div class="service-content">
                                 <h3><i class="fas fa-user-nurse"></i> 专业护工</h3>
-                                <p>经过专业培训的护理人员：</p>
-                                <ul>
-                                    <li>基础医疗护理</li>
-                                    <li>生活起居照料</li>
-                                    <li>专业照护服务</li>
-                                </ul>
+                                <p class="service-description">经过专业培训的医疗护理人员</p>
+                                
+                                <div class="service-details">
+                                    <h4><i class="fas fa-hand-holding-medical"></i> 基础医疗护理</h4>
+                                    <div class="service-tags">
+                                        <span class="service-tag">血压监测</span>
+                                        <span class="service-tag">血糖检测</span>
+                                        <span class="service-tag">体温监测</span>
+                                        <span class="service-tag">用药提醒</span>
+                                        <span class="service-tag">简单换药</span>
+                                        <span class="service-tag">皮肤护理</span>
+                                    </div>
+        
+                                    <h4><i class="fas fa-procedures"></i> 专业生活照护</h4>
+                                    <div class="service-tags">
+                                        <span class="service-tag">翻身拍背</span>
+                                        <span class="service-tag">床椅转移</span>
+                                        <span class="service-tag">压疮预防</span>
+                                        <span class="service-tag">管路照护</span>
+                                        <span class="service-tag">排痰护理</span>
+                                        <span class="service-tag">造口护理</span>
+                                    </div>
+        
+                                    <h4><i class="fas fa-walking"></i> 康复辅助</h4>
+                                    <div class="service-tags">
+                                        <span class="service-tag">助行训练</span>
+                                        <span class="service-tag">肢体活动</span>
+                                        <span class="service-tag">站立训练</span>
+                                        <span class="service-tag">康复陪同</span>
+                                        <span class="service-tag">运动指导</span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
         
+                        <!-- 生活护理员卡片 -->
                         <div class="service-card">
                             <div class="service-images">
                                 <img src="./img/R1.jpg" alt="生活护理员">
@@ -513,12 +702,36 @@
                             </div>
                             <div class="service-content">
                                 <h3><i class="fas fa-hands-helping"></i> 生活护理员</h3>
-                                <p>具备基础护理技能：</p>
-                                <ul>
-                                    <li>日常生活照料</li>
-                                    <li>基础起居陪护</li>
-                                    <li>简单护理服务</li>
-                                </ul>
+                                <p class="service-description">提供全方位生活照料服务的护理人员</p>
+                                
+                                <div class="service-details">
+                                    <h4><i class="fas fa-bed"></i> 日常照料</h4>
+                                    <div class="service-tags">
+                                        <span class="service-tag">清洁护理</span>
+                                        <span class="service-tag">穿衣整理</span>
+                                        <span class="service-tag">床单更换</span>
+                                        <span class="service-tag">个人卫生</span>
+                                        <span class="service-tag">洗漱协助</span>
+                                        <span class="service-tag">如厕照料</span>
+                                    </div>
+        
+                                    <h4><i class="fas fa-utensils"></i> 饮食照护</h4>
+                                    <div class="service-tags">
+                                        <span class="service-tag">膳食准备</span>
+                                        <span class="service-tag">协助进食</span>
+                                        <span class="service-tag">营养搭配</span>
+                                        <span class="service-tag">特殊饮食</span>
+                                        <span class="service-tag">餐具清洁</span>
+                                    </div>
+        
+                                    <h4><i class="fas fa-broom"></i> 居家服务</h4>
+                                    <div class="service-tags">
+                                        <span class="service-tag">环境整理</span>
+                                        <span class="service-tag">衣物洗护</span>
+                                        <span class="service-tag">室内消毒</span>
+                                        <span class="service-tag">垃圾处理</span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -528,6 +741,7 @@
                 <div class="service-category">
                     <h3 class="category-title">陪护服务类型</h3>
                     <div class="services-grid">
+                        <!-- 医疗陪护卡片 -->
                         <div class="service-card">
                             <div class="service-images">
                                 <img src="./img/H.webp" alt="医疗陪护">
@@ -536,15 +750,40 @@
                             </div>
                             <div class="service-content">
                                 <h3><i class="fas fa-hospital"></i> 医疗陪护</h3>
-                                <p>专业医疗护理服务：</p>
-                                <ul>
-                                    <li>术后康复护理</li>
-                                    <li>慢性病管理</li>
-                                    <li>专业医疗照护</li>
-                                </ul>
+                                <p class="service-description">全方位的医疗护理支持服务</p>
+                                
+                                <div class="service-details">
+                                    <h4><i class="fas fa-procedures"></i> 住院陪护</h4>
+                                    <div class="service-tags">
+                                        <span class="service-tag">24小时陪护</span>
+                                        <span class="service-tag">术后护理</span>
+                                        <span class="service-tag">病情观察</span>
+                                        <span class="service-tag">医嘱执行</span>
+                                        <span class="service-tag">检查陪同</span>
+                                        <span class="service-tag">治疗协助</span>
+                                    </div>
+        
+                                    <h4><i class="fas fa-file-medical"></i> 就医服务</h4>
+                                    <div class="service-tags">
+                                        <span class="service-tag">预约挂号</span>
+                                        <span class="service-tag">陪诊服务</span>
+                                        <span class="service-tag">取送报告</span>
+                                        <span class="service-tag">药品代购</span>
+                                        <span class="service-tag">病历整理</span>
+                                    </div>
+        
+                                    <h4><i class="fas fa-ambulance"></i> 急救协助</h4>
+                                    <div class="service-tags">
+                                        <span class="service-tag">紧急联络</span>
+                                        <span class="service-tag">病情报告</span>
+                                        <span class="service-tag">转院陪同</span>
+                                        <span class="service-tag">急救配合</span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
         
+                        <!-- 生活陪护卡片 -->
                         <div class="service-card">
                             <div class="service-images">
                                 <img src="./img/Daily1.jpeg" alt="生活陪护">
@@ -553,15 +792,39 @@
                             </div>
                             <div class="service-content">
                                 <h3><i class="fas fa-home"></i> 生活陪护</h3>
-                                <p>日常生活照料服务：</p>
-                                <ul>
-                                    <li>起居照料</li>
-                                    <li>饮食照护</li>
-                                    <li>环境整理</li>
-                                </ul>
+                                <p class="service-description">贴心的生活便利服务支持</p>
+                                
+                                <div class="service-details">
+                                    <h4><i class="fas fa-tasks"></i> 日常代办</h4>
+                                    <div class="service-tags">
+                                        <span class="service-tag">取送快递</span>
+                                        <span class="service-tag">代购物品</span>
+                                        <span class="service-tag">缴费服务</span>
+                                        <span class="service-tag">预约服务</span>
+                                        <span class="service-tag">文件代办</span>
+                                    </div>
+        
+                                    <h4><i class="fas fa-car"></i> 外出协助</h4>
+                                    <div class="service-tags">
+                                        <span class="service-tag">散步陪同</span>
+                                        <span class="service-tag">购物陪同</span>
+                                        <span class="service-tag">就医接送</span>
+                                        <span class="service-tag">轮椅推行</span>
+                                        <span class="service-tag">交通协助</span>
+                                    </div>
+        
+                                    <h4><i class="fas fa-calendar-check"></i> 生活规划</h4>
+                                    <div class="service-tags">
+                                        <span class="service-tag">作息安排</span>
+                                        <span class="service-tag">活动计划</span>
+                                        <span class="service-tag">日程提醒</span>
+                                        <span class="service-tag">用药提醒</span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
         
+                        <!-- 精神陪护卡片 -->
                         <div class="service-card">
                             <div class="service-images">
                                 <img src="./img/life1.webp" alt="精神陪护">
@@ -570,16 +833,183 @@
                             </div>
                             <div class="service-content">
                                 <h3><i class="fas fa-heart"></i> 精神陪护</h3>
-                                <p>情感陪伴与社交服务：</p>
-                                <ul>
-                                    <li>聊天陪伴</li>
-                                    <li>户外活动</li>
-                                    <li>兴趣培养</li>
-                                </ul>
+                                <p class="service-description">专业的心理支持与情感陪伴服务</p>
+                                
+                                <div class="service-details">
+                                    <h4><i class="fas fa-comments"></i> 情感陪伴</h4>
+                                    <div class="service-tags">
+                                        <span class="service-tag">聊天倾听</span>
+                                        <span class="service-tag">情绪疏导</span>
+                                        <span class="service-tag">心理安抚</span>
+                                        <span class="service-tag">生活分享</span>
+                                        <span class="service-tag">兴趣交流</span>
+                                    </div>
+        
+                                    <h4><i class="fas fa-users"></i> 社交活动</h4>
+                                    <div class="service-tags">
+                                        <span class="service-tag">娱乐陪伴</span>
+                                        <span class="service-tag">棋牌活动</span>
+                                        <span class="service-tag">户外散步</span>
+                                        <span class="service-tag">园艺活动</span>
+                                        <span class="service-tag">读书交流</span>
+                                    </div>
+        
+                                    <h4><i class="fas fa-brain"></i> 能力培养</h4>
+                                    <div class="service-tags">
+                                        <span class="service-tag">兴趣培养</span>
+                                        <span class="service-tag">技能学习</span>
+                                        <span class="service-tag">认知训练</span>
+                                        <span class="service-tag">记忆力练习</span>
+                                        <span class="service-tag">手工活动</span>
                             </div>
                         </div>
                     </div>
                 </div>
+            </div>
+
+                <!-- 特殊照护服务类别 -->
+                <div class="service-category">
+                    <h3 class="category-title">特殊照护服务</h3>
+                    <div class="services-grid">
+                        <!-- 专项陪护卡片 -->
+                        <div class="service-card">
+                            <div class="service-images">
+                                <img src="./img/T10.jpg" alt="专项陪护">
+                                <img src="./img/T13.jpg" alt="特殊照护">
+                                <img src="./img/T11.jpg" alt="专业服务">
+                            </div>
+                            <div class="service-content">
+                                <h3><i class="fas fa-star"></i> 专项陪护</h3>
+                                <p class="service-description">特殊群体的专业照护服务</p>
+                                
+                                <div class="service-details">
+                                    <h4><i class="fas fa-brain"></i> 失智照护</h4>
+                                    <div class="service-tags">
+                                        <span class="service-tag">安全看护</span>
+                                        <span class="service-tag">行为引导</span>
+                                        <span class="service-tag">情绪安抚</span>
+                                        <span class="service-tag">认知训练</span>
+                                        <span class="service-tag">生活指导</span>
+                                        <span class="service-tag">走失预防</span>
+                                    </div>
+
+                                    <h4><i class="fas fa-wheelchair"></i> 瘫痪照护</h4>
+                                    <div class="service-tags">
+                                        <span class="service-tag">体位转移</span>
+                                        <span class="service-tag">肢体护理</span>
+                                        <span class="service-tag">按摩保健</span>
+                                        <span class="service-tag">康复训练</span>
+                                        <span class="service-tag">并发预防</span>
+                                        <span class="service-tag">辅具使用</span>
+                                    </div>
+
+                                    <h4><i class="fas fa-baby"></i> 母婴照护</h4>
+                                    <div class="service-tags">
+                                        <span class="service-tag">产妇护理</span>
+                                        <span class="service-tag">新生儿照料</span>
+                                        <span class="service-tag">月子餐准备</span>
+                                        <span class="service-tag">催乳指导</span>
+                                        <span class="service-tag">婴儿护理</span>
+                                        <span class="service-tag">产后恢复</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 重症监护卡片 -->
+                        <div class="service-card">
+                            <div class="service-images">
+                                <img src="./img/T21.jpg" alt="重症监护">
+                                <img src="./img/T22.jpg" alt="专业医疗">
+                                <img src="./img/T23.jpg" alt="重症照护">
+                            </div>
+                            <div class="service-content">
+                                <h3><i class="fas fa-heartbeat"></i> 重症监护</h3>
+                                <p class="service-description">专业的重症患者照护服务</p>
+                                
+                                <div class="service-details">
+                                    <h4><i class="fas fa-procedures"></i> 生命监护</h4>
+                                    <div class="service-tags">
+                                        <span class="service-tag">生命体征监测</span>
+                                        <span class="service-tag">呼吸管理</span>
+                                        <span class="service-tag">心率监测</span>
+                                        <span class="service-tag">血氧监测</span>
+                                        <span class="service-tag">意识观察</span>
+                                        <span class="service-tag">并发症预防</span>
+                                    </div>
+
+                                    <h4><i class="fas fa-syringe"></i> 治疗配合</h4>
+                                    <div class="service-tags">
+                                        <span class="service-tag">用药管理</span>
+                                        <span class="service-tag">伤口护理</span>
+                                        <span class="service-tag">管路护理</span>
+                                        <span class="service-tag">吸痰护理</span>
+                                        <span class="service-tag">营养支持</span>
+                                        <span class="service-tag">康复训练</span>
+                                    </div>
+
+                                    <h4><i class="fas fa-clipboard-list"></i> 专业照护</h4>
+                                    <div class="service-tags">
+                                        <span class="service-tag">无菌操作</span>
+                                        <span class="service-tag">体位护理</span>
+                                        <span class="service-tag">皮肤护理</span>
+                                        <span class="service-tag">管路维护</span>
+                                        <span class="service-tag">排痰护理</span>
+                                        <span class="service-tag">并发症观察</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 临终关怀卡片 -->
+                        <div class="service-card">
+                            <div class="service-images">
+                                <img src="./img/T31.jpg" alt="临终关怀">
+                                <img src="./img/T32.jpg" alt="舒适照护">
+                                <img src="./img/T33.jpg" alt="专业服务">
+                            </div>
+                            <div class="service-content">
+                                <h3><i class="fas fa-dove"></i> 临终关怀</h3>
+                                <p class="service-description">专业的生命末期照护服务</p>
+                                
+                                <div class="service-details">
+                                    <h4><i class="fas fa-hand-holding-heart"></i> 舒适照护</h4>
+                                    <div class="service-tags">
+                                        <span class="service-tag">疼痛管理</span>
+                                        <span class="service-tag">症状控制</span>
+                                        <span class="service-tag">舒适护理</span>
+                                        <span class="service-tag">营养支持</span>
+                                        <span class="service-tag">卫生清洁</span>
+                                        <span class="service-tag">体位护理</span>
+                                    </div>
+
+                                    <h4><i class="fas fa-hands-helping"></i> 心理支持</h4>
+                                    <div class="service-tags">
+                                        <span class="service-tag">情感陪伴</span>
+                                        <span class="service-tag">哀伤辅导</span>
+                                        <span class="service-tag">心理疏导</span>
+                                        <span class="service-tag">家属支持</span>
+                                        <span class="service-tag">临终关怀</span>
+                                        <span class="service-tag">心愿达成</span>
+                                    </div>
+
+                                    <h4><i class="fas fa-praying-hands"></i> 善终服务</h4>
+                                    <div class="service-tags">
+                                        <span class="service-tag">生命教育</span>
+                                        <span class="service-tag">遗愿完成</span>
+                                        <span class="service-tag">临终陪伴</span>
+                                        <span class="service-tag">后事指导</span>
+                                        <span class="service-tag">礼仪服务</span>
+                                        <span class="service-tag">悼念支持</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                
+                   
             </div>
         </section>
 
@@ -661,7 +1091,7 @@
         <section id="vision" class="section">
             <h2>长期愿景</h2>
             <div class="vision-container">
-                <div class="features-grid">
+                <div class="features-grid" style="grid-template-columns: repeat(3, 1fr);">
                     <div class="feature-item">
                         <i class="fas fa-heart"></i>
                         <h3>构建关爱社会</h3>
@@ -732,7 +1162,7 @@
                             <div class="qr-code-wrapper" style="background: white; padding: 15px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
                                 <img src="./img/GZH.jpg" alt="公众号二维码" style="width: 150px; height: 150px; margin-bottom: 10px;">
                                 <h4 style="color: var(--primary-color); margin: 10px 0;">关注公众号</h4>
-                                <p style="font-size: 14px; color: #666;">及时获取养老资讯</p>
+                                <p style="font-size: 14px; color: #666;">及时获取相关资讯</p>
                                 <p style="font-size: 14px; color: #666;">享受更多专属服务</p>
                             </div>
                         </div>
@@ -793,27 +1223,55 @@
         // 如需添加更多交互效果，可以在这里扩展 JavaScript 代码
     </script>
 
-<script>
-    // 图片点击切换效果
-    document.querySelector('.about-image-slider').addEventListener('click', function() {
-        const images = this.getElementsByTagName('img');
-        let nextImage = null;
-        
-        for(let i = 0; i < images.length; i++) {
-            if(getComputedStyle(images[i]).opacity > 0) {
-                images[i].style.opacity = 0;
-                nextImage = images[(i + 1) % images.length];
-                break;
-            }
+
+    <script>
+        function initializeImageSlider(sliderClass) {
+            const sliders = document.querySelectorAll(sliderClass);
+            
+            sliders.forEach(slider => {
+                const images = slider.getElementsByTagName('img');
+                const dotsContainer = document.createElement('div');
+                dotsContainer.className = 'dots-container';
+                
+                // 创建圆点指示器
+                for(let i = 0; i < images.length; i++) {
+                    const dot = document.createElement('span');
+                    dot.className = 'dot' + (i === 0 ? ' active' : '');
+                    dot.addEventListener('click', () => switchToImage(i));
+                    dotsContainer.appendChild(dot);
+                }
+                
+                slider.appendChild(dotsContainer);
+                
+                // 图片切换函数
+                function switchToImage(index) {
+                    Array.from(images).forEach((img, i) => {
+                        img.style.opacity = i === index ? '1' : '0';
+                    });
+                    Array.from(dotsContainer.children).forEach((dot, i) => {
+                        dot.className = 'dot' + (i === index ? ' active' : '');
+                    });
+                }
+                
+                // 点击切换到下一张图片
+                slider.addEventListener('click', function(e) {
+                    if (e.target.classList.contains('dot')) return;
+                    
+                    const currentIndex = Array.from(images)
+                        .findIndex(img => getComputedStyle(img).opacity > '0');
+                    const nextIndex = (currentIndex + 1) % images.length;
+                    switchToImage(nextIndex);
+                });
+            });
         }
-        
-        if(nextImage) {
-            nextImage.style.opacity = 1;
-        } else {
-            images[0].style.opacity = 1;
-        }
-    });
+
+        // 初始化所有图片轮播
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeImageSlider('.about-image-slider');
+            initializeImageSlider('.service-images');
+        });
     </script>
+
 
 </body>
 </html>

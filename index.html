@@ -203,16 +203,41 @@
         }
 
         .about-image-slider img {
-            animation: imageSliderAbout 12s infinite;
+            animation: imageSliderAbout 30s infinite;
             opacity: 0;
         }
 
         .about-image-slider img:nth-child(2) {
-            animation-delay: 4s;
+            animation-delay: 10s;
         }
 
         .about-image-slider img:nth-child(3) {
-            animation-delay: 8s;
+            animation-delay: 20s;
+        }
+
+        .dots-container {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            z-index: 10;
+        }
+
+        .dot {
+            width: 12px;
+            height: 12px;
+            background: rgba(255, 255, 255, 0.5);
+            border: 2px solid #fff;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .dot.active {
+            background: var(--primary-color);
+            transform: scale(1.2);
         }
 
         .vision-container .features-grid {
@@ -467,31 +492,6 @@
                 grid-template-columns: 1fr;
             }
 
-            .dots-container {
-                position: absolute;
-                bottom: 20px;
-                left: 50%;
-                transform: translateX(-50%);
-                display: flex;
-                gap: 10px;
-                z-index: 10;
-            }
-
-            .dot {
-                width: 12px;
-                height: 12px;
-                background: rgba(255, 255, 255, 0.5);
-                border: 2px solid #fff;
-                border-radius: 50%;
-                cursor: pointer;
-                transition: all 0.3s ease;
-            }
-
-            .dot.active {
-                background: var(--primary-color);
-                transform: scale(1.2);
-            }
-
             .section {
                 padding: 20px;
             }
@@ -507,15 +507,15 @@
         }
 
         .service-images img {
-            animation: imageSlider 9s infinite;
+            animation: imageSlider 23s infinite;
         }
 
         .service-images img:nth-child(2) {
-            animation-delay: 3s;
+            animation-delay: 8s;
         }
 
         .service-images img:nth-child(3) {
-            animation-delay: 6s;
+            animation-delay: 15s;
         }
         .qr-code-wrapper {
     transition: transform 0.3s ease;
@@ -1230,17 +1230,15 @@
             
             sliders.forEach(slider => {
                 const images = Array.from(slider.getElementsByTagName('img'));
+                const dots = Array.from(slider.querySelectorAll('.dot'));
                 let currentIndex = 0;
                 
                 function showImage(index) {
                     images.forEach((img, i) => {
-                        if (i === index) {
-                            img.style.opacity = '1';
-                            img.style.transform = 'translateZ(0) rotateY(0)';
-                        } else {
-                            img.style.opacity = '0';
-                            img.style.transform = 'translateZ(-50px) rotateY(10deg)';
-                        }
+                        img.style.opacity = i === index ? '1' : '0';
+                    });
+                    dots.forEach((dot, i) => {
+                        dot.classList.toggle('active', i === index);
                     });
                 }
                 
@@ -1255,8 +1253,8 @@
                 // 初始化显示
                 showImage(0);
                 
-                // 可选：自动播放
-                setInterval(nextImage, 5000);
+                // 自动播放
+                setInterval(nextImage, 10000);
             });
         }
 
@@ -1264,7 +1262,7 @@
         document.addEventListener('DOMContentLoaded', function() {
             initializeImageSlider('.about-image-slider');
             initializeImageSlider('.service-images');
-        }); 
+        });
     </script>
 
 

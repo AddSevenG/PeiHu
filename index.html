@@ -1229,47 +1229,42 @@
             const sliders = document.querySelectorAll(sliderClass);
             
             sliders.forEach(slider => {
-                const images = slider.getElementsByTagName('img');
-                const dotsContainer = document.createElement('div');
-                dotsContainer.className = 'dots-container';
+                const images = Array.from(slider.getElementsByTagName('img'));
+                let currentIndex = 0;
                 
-                // 创建圆点指示器
-                for(let i = 0; i < images.length; i++) {
-                    const dot = document.createElement('span');
-                    dot.className = 'dot' + (i === 0 ? ' active' : '');
-                    dot.addEventListener('click', () => switchToImage(i));
-                    dotsContainer.appendChild(dot);
-                }
-                
-                slider.appendChild(dotsContainer);
-                
-                // 图片切换函数
-                function switchToImage(index) {
-                    Array.from(images).forEach((img, i) => {
-                        img.style.opacity = i === index ? '1' : '0';
-                    });
-                    Array.from(dotsContainer.children).forEach((dot, i) => {
-                        dot.className = 'dot' + (i === index ? ' active' : '');
+                function showImage(index) {
+                    images.forEach((img, i) => {
+                        if (i === index) {
+                            img.style.opacity = '1';
+                            img.style.transform = 'translateZ(0) rotateY(0)';
+                        } else {
+                            img.style.opacity = '0';
+                            img.style.transform = 'translateZ(-50px) rotateY(10deg)';
+                        }
                     });
                 }
                 
-                // 点击切换到下一张图片
-                slider.addEventListener('click', function(e) {
-                    if (e.target.classList.contains('dot')) return;
-                    
-                    const currentIndex = Array.from(images)
-                        .findIndex(img => getComputedStyle(img).opacity > '0');
-                    const nextIndex = (currentIndex + 1) % images.length;
-                    switchToImage(nextIndex);
-                });
+                function nextImage() {
+                    currentIndex = (currentIndex + 1) % images.length;
+                    showImage(currentIndex);
+                }
+                
+                // 点击切换图片
+                slider.addEventListener('click', nextImage);
+                
+                // 初始化显示
+                showImage(0);
+                
+                // 可选：自动播放
+                setInterval(nextImage, 5000);
             });
         }
 
-        // 初始化所有图片轮播
+        // 页面加载完成后初始化所有图片轮播
         document.addEventListener('DOMContentLoaded', function() {
             initializeImageSlider('.about-image-slider');
             initializeImageSlider('.service-images');
-        });
+        }); 
     </script>
 
 

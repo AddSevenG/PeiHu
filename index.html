@@ -1,1270 +1,2783 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" type="image/x-icon" href="./img/logo.ico">
-    <title>渝适之家 - Elderly Care Platform</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <title>员工考勤管理系统 v2</title>
     <style>
+        /* General Styles */
         :root {
-            --primary-color: #ff9800;
-            --secondary-color: #f57c00;
-            --text-color: #333;
-            --bg-light: #f4f4f4;
+            --primary-color: #2196F3;
+            --primary-dark: #1976D2;
+            --danger-color: #f44336;
+            --danger-dark: #d32f2f;
+            --warning-color: #ffa000; /* Orange for resigned */
+            --warning-dark: #ef6c00;
+            --light-gray: #f5f5f5;
+            --medium-gray: #ddd;
+            --dark-gray: #333;
+            --text-gray: #757575; /* For resigned text */
             --white: #ffffff;
+            --blue-light: #e3f2fd;
+            --border-radius: 6px; /* Slightly more rounded */
+            --box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            --input-height: 38px;
         }
 
-        * {
-            margin: 0;
-            padding: 0;
+        *, *::before, *::after {
             box-sizing: border-box;
         }
 
         body {
-            font-family: 'Arial', sans-serif;
-            background-color: var(--bg-light);
-            color: var(--text-color);
-            line-height: 1.6;
+            font-family: 'Microsoft YaHei', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--light-gray);
+            color: var(--dark-gray);
+            font-size: 14px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
         }
 
-        /* Header Styles */
-        header {
-            background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
+        /* Hide elements */
+        .hidden {
+            display: none !important;
+        }
+
+        /* Buttons */
+        button {
+            padding: 0 24px; /* Adjusted padding */
+            height: var(--input-height); /* Match input height */
+            line-height: var(--input-height); /* Vertically center text */
+            border-radius: var(--border-radius);
+            font-size: 14px;
+            min-width: 100px;
+            cursor: pointer;
+            border: none;
+            transition: background-color 0.2s ease, box-shadow 0.2s ease;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+        button:disabled {
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .primary-button {
+            background-color: var(--primary-color);
             color: var(--white);
-            padding: 15px 0;
-            position: fixed;
+        }
+        .primary-button:hover:not(:disabled) {
+            background-color: var(--primary-dark);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .danger-button {
+            background-color: var(--danger-color);
+            color: var(--white);
+        }
+        .danger-button:hover:not(:disabled) {
+            background-color: var(--danger-dark);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .warning-button { /* For Resigned button */
+            background-color: var(--warning-color);
+            color: var(--white);
+        }
+        .warning-button:hover:not(:disabled) {
+            background-color: var(--warning-dark);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .secondary-button {
+            background-color: var(--white);
+            color: var(--dark-gray);
+            border: 1px solid var(--medium-gray);
+        }
+        .secondary-button:hover:not(:disabled) {
+            background-color: #e9e9e9;
+            border-color: #bbb;
+        }
+
+        /* Inputs & Selects */
+        input[type="text"],
+        input[type="password"],
+        input[type="number"],
+        input[type="date"],
+        select,
+        textarea {
+            padding: 8px 12px; /* Adjusted padding */
+            border: 1px solid var(--medium-gray);
+            border-radius: var(--border-radius);
+            font-size: 14px; /* Increased font size slightly */
+            min-width: 150px;
+            height: var(--input-height);
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+        input[type="text"]:focus,
+        input[type="password"]:focus,
+        input[type="number"]:focus,
+        input[type="date"]:focus,
+        select:focus,
+        textarea:focus {
+            border-color: var(--primary-color);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.2);
+        }
+        input[readonly], select[disabled] {
+            background-color: #eee;
+            cursor: not-allowed;
+        }
+        input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            vertical-align: middle;
+            accent-color: var(--primary-color); /* Modern checkbox color */
+        }
+        input[type="checkbox"]:disabled {
+             accent-color: var(--medium-gray);
+             cursor: not-allowed;
+        }
+        textarea {
+            min-height: 80px;
+            resize: vertical;
+            height: auto; /* Override fixed height */
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #555;
+        }
+
+        /* Cards */
+        .card {
+            background-color: var(--white);
+            border-radius: 8px;
+            padding: 20px 25px; /* Increased padding */
+            margin-bottom: 20px; /* Increased margin */
+            box-shadow: var(--box-shadow);
+            border: 1px solid #e0e0e0; /* Subtle border */
+        }
+        .card-title {
+            font-size: 18px;
+            color: var(--primary-dark);
+            font-weight: 600; /* Bolder title */
+            margin-bottom: 20px; /* Increased spacing */
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        .settings-card {
+            background-color: #fdfdfd; /* Slightly off-white */
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+             border: 1px solid #eee;
+        }
+
+        /* Layout */
+        .container {
+            width: 95%;
+            max-width: 1600px;
+            min-height: 85vh; /* Increased height */
+            background-color: var(--white);
+            border-radius: 8px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1); /* Softer shadow */
+            overflow: hidden;
+        }
+        .main-layout {
+            display: flex;
+            height: 100%;
+        }
+        .sidebar {
+            width: 300px; /* Slightly wider sidebar */
+            background-color: #fafafa; /* Lighter sidebar */
+            border-right: 1px solid var(--medium-gray);
+            padding: 25px; /* Increased padding */
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+        .panel-title {
+            font-size: 22px; /* Larger title */
+            color: var(--primary-dark);
+            font-weight: 600;
+            margin-bottom: 25px;
+        }
+        .content {
+            flex-grow: 1;
+            padding: 25px; /* Increased padding */
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* Login Screen */
+        #login-screen {
+            width: 420px; /* Slightly wider */
+            padding: 40px;
+            background-color: var(--white);
+            border-radius: 8px;
+            box-shadow: var(--box-shadow);
+            text-align: center;
+        }
+        #login-screen h1 {
+            font-size: 26px; /* Larger title */
+            color: var(--primary-color);
+            margin-bottom: 35px;
+            font-weight: 600;
+        }
+        #login-screen .form-group {
+            margin-bottom: 20px; /* Increased spacing */
+            text-align: left;
+        }
+        #login-screen label {
+            display: block;
+            margin-bottom: 8px; /* Increased spacing */
+            font-weight: 500;
+        }
+        #login-screen input {
             width: 100%;
+        }
+        #login-screen button {
+            width: 100%;
+            margin-top: 15px;
+            height: 42px; /* Taller button */
+        }
+
+        /* Tabs */
+        .tab-nav {
+            display: flex;
+            border-bottom: 2px solid var(--medium-gray); /* Thicker border */
+            margin-bottom: 25px;
+        }
+        .tab-button {
+            padding: 12px 25px; /* Increased padding */
+            cursor: pointer;
+            border: none;
+            background-color: transparent;
+            border-bottom: 3px solid transparent;
+            margin-bottom: -2px; /* Overlap border */
+            font-size: 15px;
+            color: #555;
+            font-weight: 500;
+            transition: color 0.2s ease, border-color 0.2s ease;
+        }
+        .tab-button:hover {
+            color: var(--primary-color);
+        }
+        .tab-button.active {
+            border-bottom-color: var(--primary-color);
+            font-weight: 600; /* Bolder active tab */
+            color: var(--primary-color);
+        }
+        .tab-content {
+             flex-grow: 1;
+             overflow-y: auto;
+        }
+
+        /* Tables */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            background-color: var(--white);
+            border: 1px solid var(--medium-gray);
+            border-radius: var(--border-radius);
+            overflow: hidden;
+        }
+        th, td {
+            padding: 12px 15px; /* Increased padding */
+            text-align: left;
+            border-bottom: 1px solid #eee; /* Lighter row separator */
+            vertical-align: middle; /* Align vertically */
+        }
+        th {
+            background-color: #f8f9fa; /* Lighter header */
+            font-weight: 600; /* Bolder header text */
+            white-space: nowrap;
+            color: #444;
+        }
+        tbody tr:nth-child(even) {
+            background-color: #fdfdfd; /* Very subtle striping */
+        }
+        tbody tr:hover {
+            background-color: var(--blue-light);
+            /* cursor: pointer; Don't show pointer if row itself isn't clickable */
+        }
+        tbody tr.clickable:hover { /* Add clickable class for rows with actions */
+             cursor: pointer;
+        }
+        .table-container {
+           overflow-x: auto;
+           flex-grow: 1;
+        }
+        /* Resigned Employee Styling */
+        .resigned-employee td {
+            color: var(--text-gray);
+            font-style: italic;
+        }
+        .resigned-employee:hover { /* Keep hover consistent */
+            background-color: var(--blue-light);
+        }
+        .resigned-employee input[type="checkbox"] {
+            visibility: hidden; /* Hide checkbox visually */
+        }
+
+        /* Forms */
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); /* Adjusted minmax */
+            gap: 20px; /* Increased gap */
+            align-items: end;
+        }
+        .form-row {
+             display: grid;
+             grid-template-columns: 100px 1fr;
+             gap: 10px;
+             margin-bottom: 15px; /* Increased spacing */
+             align-items: center;
+         }
+         .form-row label {
+             text-align: right;
+             margin-bottom: 0; /* Remove bottom margin for grid alignment */
+             color: #555;
+         }
+
+        .form-group label {
+            font-weight: 500;
+            margin-bottom: 8px; /* Increased spacing */
+            display: block;
+            color: #555;
+        }
+         .form-group-inline {
+             display: flex;
+             gap: 15px; /* Increased gap */
+             align-items: center;
+             flex-wrap: wrap;
+         }
+         .form-group-inline > label {
+             margin-bottom: 0; /* Remove margin for inline labels */
+         }
+         .form-group-inline > *:last-child { /* Push last button to right */
+             margin-left: auto;
+         }
+
+        /* Modals */
+        .modal {
+            position: fixed;
             top: 0;
             left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6); /* Darker backdrop */
+            display: flex;
+            justify-content: center;
+            align-items: center;
             z-index: 1000;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 20px; /* Add padding for smaller screens */
         }
-
-        .header-content {
-            max-width: 1400px;
-            margin: 0 auto;
+        .modal-content {
+            background-color: var(--white);
+            padding: 0; /* Remove padding, handle with header/body/footer */
+            border-radius: 8px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column; /* Structure content vertically */
+            min-width: 500px;
+            max-width: 95%;
+            overflow: hidden; /* Prevent content overflow */
+        }
+        .modal-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 0 20px;
+            border-bottom: 1px solid var(--medium-gray);
+            padding: 15px 25px; /* Consistent padding */
+            background-color: #f9f9f9; /* Light header background */
         }
-
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .logo img {
-            height: 50px;
-            border-radius: 8px;
-        }
-
-        .logo h1 {
-            font-size: 24px;
-            font-weight: bold;
-        }
-
-        nav {
-            display: flex;
-            gap: 25px;
-        }
-
-        nav a {
-            color: var(--white);
-            text-decoration: none;
-            font-weight: 500;
-            padding: 8px 15px;
-            border-radius: 20px;
-            transition: all 0.3s ease;
-        }
-
-        nav a:hover {
-            background-color: rgba(255, 255, 255, 0.2);
-            transform: translateY(-2px);
-        }
-
-        /* Main Container */
-        .container {
-            max-width: 1400px;
-            margin: 100px auto 40px;
-            padding: 0 20px;
-        }
-
-        .about-section-container {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 40px;
-            align-items: center;
-        }
-
-        .about-text-content {
-            padding-right: 20px;
-        }
-
-        .highlight-text {
-            font-size: 24px;
-            color: var(--primary-color);
-            font-weight: bold;
-            margin-bottom: 25px;
-            line-height: 1.4;
-            font-family: "Microsoft YaHei", sans-serif;
-            border-left: 4px solid var(--primary-color);
-            padding-left: 15px;
-        }
-
-        .text-block {
-            margin-bottom: 30px;
-            max-width: 600px;
-        }
-
-        .text-block h3 {
+        .modal-title {
             font-size: 20px;
-            color: var(--secondary-color);
-            margin-bottom: 15px;
+            font-weight: 600;
+            color: var(--primary-dark);
+        }
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 28px; /* Larger close button */
+            cursor: pointer;
+            color: #aaa;
+            padding: 0 5px;
+            line-height: 1;
+        }
+         .modal-close:hover {
+             color: var(--dark-gray);
+         }
+        .modal-body {
+            padding: 25px; /* Consistent padding */
+            overflow-y: auto; /* Allow body scrolling */
+            flex-grow: 1; /* Allow body to fill space */
+        }
+        .modal-footer {
+            border-top: 1px solid var(--medium-gray);
+            padding: 15px 25px; /* Consistent padding */
+            text-align: right;
             display: flex;
-            align-items: center;
             gap: 10px;
+            justify-content: flex-end;
+            background-color: #f9f9f9; /* Light footer background */
         }
+         .modal-footer > *:first-child { /* Push delete/resign button left */
+             margin-right: auto;
+         }
 
-        .text-block h3 i {
-            color: var(--primary-color);
-        }
 
-        .text-block p {
-            font-size: 16px;
-            line-height: 1.8;
-            color: #555;
-            margin-bottom: 15px;
-            text-align: justify;
-        }
-
-        .text-block ul {
-            list-style: none;
-            padding-left: 25px;
-        }
-
-        .text-block ul li {
-            position: relative;
-            padding: 8px 0;
+        /* Specific Element Styles */
+        #stats-result {
+            min-height: 150px;
+            background-color: #fdfdfd;
+            border: 1px solid var(--medium-gray);
+            padding: 15px; /* Increased padding */
+            font-family: monospace;
+            white-space: pre-wrap;
+            font-size: 13px;
             line-height: 1.6;
-            color: #666;
+            margin-top: 10px;
         }
-
-        .text-block ul li::before {
-            content: "•";
-            color: var(--primary-color);
-            font-size: 20px;
-            position: absolute;
-            left: -20px;
-            top: 5px;
-        }
-
-        .about-image-slider {
-            position: relative;
-            height: 500px;
-            border-radius: 15px;
-            overflow: hidden;
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-        }
-
-        .about-image-slider img {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transition: opacity 0.5s ease;
-            cursor: pointer;
-        }
-
-        @media (max-width: 968px) {
-            .about-section-container {
-                grid-template-columns: 1fr;
-            }
-            
-            .about-text-content {
-                padding-right: 0;
-            }
-            
-            .about-image-slider {
-                height: 400px;
-            }
-        }
-
-        /* 图片切换动画 */
-        @keyframes imageSliderAbout {
-            0% { opacity: 0; }
-            20% { opacity: 1; }
-            33.33% { opacity: 1; }
-            53.33% { opacity: 0; }
-            100% { opacity: 0; }
-        }
-
-        .about-image-slider img {
-            animation: imageSliderAbout 30s infinite;
-            opacity: 0;
-        }
-
-        .about-image-slider img:nth-child(2) {
-            animation-delay: 10s;
-        }
-
-        .about-image-slider img:nth-child(3) {
-            animation-delay: 20s;
-        }
-
-        .dots-container {
-            position: absolute;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            gap: 10px;
-            z-index: 10;
-        }
-
-        .dot {
-            width: 12px;
-            height: 12px;
-            background: rgba(255, 255, 255, 0.5);
-            border: 2px solid #fff;
-            border-radius: 50%;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .dot.active {
-            background: var(--primary-color);
-            transform: scale(1.2);
-        }
-
-        .vision-container .features-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 30px;
-            margin-top: 30px;
-        }
-
-        @media (max-width: 768px) {
-            .vision-container .features-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        /* Section Styles */
-        .section {
-            background: var(--white);
-            border-radius: 15px;
-            padding: 40px;
-            margin-bottom: 40px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
-            transition: transform 0.3s ease;
-        }
-
-        .section:hover {
-            transform: translateY(-5px);
-        }
-
-        .section h2 {
-            color: var(--primary-color);
-            text-align: center;
-            font-size: 32px;
-            margin-bottom: 30px;
-            position: relative;
-            padding-bottom: 15px;
-        }
-
-        .section h2::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 100px;
-            height: 3px;
-            background: var(--primary-color);
-            border-radius: 2px;
-        }
-
-        /* Services Grid */
-        .services-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 30px;
-            margin-top: 40px;
-        }
-
-        .service-card {
-            background: var(--white);
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        }
-
-        .service-images {
-            position: relative;
-            height: 250px;
-            overflow: hidden;
-        }
-
-        .service-images img {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transition: opacity 0.5s ease;
-        }
-
-        .service-images img:not(:first-child) {
-            opacity: 0;
-        }
-
-        .service-content {
-            padding: 20px;
-        }
-
-        .service-content h3 {
-            color: var(--primary-color);
-            margin-bottom: 15px;
-            font-size: 20px;
-        }
-
-        .service-content p {
-            color: var(--text-color);
-            margin-bottom: 15px;
-        }
-
-        /* Features Section */
-        .features-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 30px;
-            margin-top: 30px;
-        }
-
-        .feature-item {
-            text-align: center;
-            padding: 20px;
-            background: rgba(255, 152, 0, 0.05);
-            border-radius: 10px;
-        }
-
-        .feature-item i {
-            font-size: 40px;
-            color: var(--primary-color);
-            margin-bottom: 15px;
-        }
-
-        /* Contact Section */
-        .contact-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 30px;
-        }
-
-        .contact-info {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            padding: 15px;
-            background: rgba(255, 152, 0, 0.05);
-            border-radius: 10px;
-            margin-bottom: 15px;
-        }
-
-        .contact-info i {
-            font-size: 24px;
-            color: var(--primary-color);
-        }
-
-
-        /* 服务类别样式优化 */
-        .service-category {
-            margin-bottom: 40px;
-            background: rgba(255, 152, 0, 0.03);
-            padding: 30px;
-            border-radius: 15px;
-        }
-
-        .category-title {
-            color: var(--primary-color);
-            font-size: 24px;
-            margin-bottom: 25px;
-            padding-bottom: 15px;
-            border-bottom: 2px solid var(--primary-color);
-            position: relative;
-        }
-
-        .category-title::after {
-            content: '';
-            position: absolute;
-            bottom: -2px;
-            left: 0;
-            width: 80px;
-            height: 2px;
-            background: var(--secondary-color);
-        }
-
-        /* 服务内容样式优化 */
-        .service-content {
-            padding: 25px;
-        }
-
-        .service-content h3 {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            color: var(--primary-color);
-            font-size: 22px;
-            margin-bottom: 20px;
-        }
-
-        .service-content ul {
-            list-style: none;
-            padding: 0;
-        }
-
-        .service-content ul li {
-            position: relative;
-            padding: 8px 0 8px 25px;
-            color: #555;
-        }
-
-        .service-content ul li::before {
-            content: "•";
-            color: var(--primary-color);
-            font-size: 20px;
-            position: absolute;
-            left: 0;
-        }
-
-        .service-details {
-            margin-top: 15px;
-            padding-top: 15px;
-            border-top: 1px dashed #ddd;
-        }
-
-        .service-details h4 {
-            color: var(--secondary-color);
-            margin-bottom: 10px;
-            font-size: 16px;
-        }
-
-        .service-tag {
-            display: inline-block;
-            padding: 4px 12px;
-            background: rgba(255, 152, 0, 0.1);
-            border-radius: 15px;
-            margin: 5px;
+        #preview-label {
             font-size: 14px;
-            color: var(--secondary-color);
+            color: var(--primary-dark);
+            padding: 10px 15px;
+            background-color: var(--blue-light);
+            border-radius: var(--border-radius);
+            margin-top: 15px;
+            display: block;
+            min-height: 1.5em;
+            border: 1px solid #b3e5fc; /* Subtle border */
+        }
+        /* Employee Detail Modal Grid */
+         .employee-detail-grid {
+             display: grid;
+             grid-template-columns: auto 1fr auto 1fr auto 1fr; /* Label, Input, Label, Input ... */
+             gap: 15px 20px; /* Row and column gap */
+             align-items: center; /* Vertically align items */
+         }
+         .employee-detail-grid label {
+             font-weight: 500;
+             text-align: right;
+             color: #555;
+         }
+         .employee-detail-grid span { /* For displaying read-only ID */
+             padding: 8px 12px;
+             background-color: #eee;
+             border-radius: var(--border-radius);
+             height: var(--input-height);
+             line-height: calc(var(--input-height) - 16px); /* Adjust line height */
+             display: inline-block; /* Ensure height is respected */
+             min-width: 150px; /* Match input width */
+             border: 1px solid var(--medium-gray); /* Match input border */
+         }
+         .employee-detail-grid .resigned-label {
+             grid-column: 1 / -1; /* Span full width */
+             text-align: center;
+             font-weight: bold;
+             color: var(--warning-dark);
+             background-color: #fff8e1;
+             padding: 10px;
+             border-radius: var(--border-radius);
+             margin-top: 10px;
+             border: 1px solid var(--warning-color);
+         }
+
+
+        /* Batch Attendance Styles */
+        .batch-attendance-layout {
+            display: flex;
+            gap: 25px; /* Increased gap */
+            min-height: 60vh;
+        }
+        .batch-attendance-layout > div {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        #batch-emp-list-container {
+             flex-grow: 1;
+             overflow-y: auto;
+             border: 1px solid var(--medium-gray);
+             border-radius: var(--border-radius);
+             margin-top: 10px;
+             max-height: 45vh; /* Adjusted height */
+         }
+         #batch-emp-list {
+             margin-top: 0;
+         }
+         .date-picker-row {
+             display: flex;
+             gap: 20px;
+             margin-bottom: 20px; /* Increased spacing */
+         }
+         .date-picker-row > div {
+             flex: 1;
+         }
+         #batch-emp-list th:first-child, #batch-emp-list td:first-child {
+             width: 40px; /* Fixed width for checkbox column */
+             text-align: center;
+         }
+
+        /* File input styling */
+        input[type="file"] {
+            border: 1px dashed var(--medium-gray);
+            padding: 10px;
+            height: auto;
+            cursor: pointer;
+            background-color: #f9f9f9;
+        }
+        input[type="file"]:hover {
+            border-color: var(--primary-color);
         }
 
-        .service-tag:hover {
-            background: rgba(255, 152, 0, 0.2);
-            transform: translateY(-2px);
+        /* Calendar Widget styling (basic) */
+        input[type="date"]::-webkit-calendar-picker-indicator {
+            cursor: pointer;
+            opacity: 0.7;
+        }
+         input[type="date"]::-webkit-calendar-picker-indicator:hover {
+            opacity: 1;
         }
 
-        /* Footer */
-        footer {
-            background: var(--text-color);
-            color: var(--white);
-            text-align: center;
-            padding: 20px;
-            margin-top: 40px;
-        }
-
-        /* Responsive Design */
-        @media (max-width: 768px) {
-            .header-content {
-                flex-direction: column;
-                gap: 20px;
-            }
-
-            nav {
-                flex-wrap: wrap;
-                justify-content: center;
-            }
-
-            .services-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .section {
-                padding: 20px;
-            }
-        }
-
-        /* Animation for service images */
-        @keyframes imageSlider {
-            0% { opacity: 0; }
-            20% { opacity: 1; }
-            33.33% { opacity: 1; }
-            53.33% { opacity: 0; }
-            100% { opacity: 0; }
-        }
-
-        .service-images img {
-            animation: imageSlider 23s infinite;
-        }
-
-        .service-images img:nth-child(2) {
-            animation-delay: 8s;
-        }
-
-        .service-images img:nth-child(3) {
-            animation-delay: 15s;
-        }
-        .qr-code-wrapper {
-    transition: transform 0.3s ease;
-}
-
-.qr-code-wrapper:hover {
-    transform: translateY(-5px);
-}
-
-@media (max-width: 768px) {
-    .qr-codes-grid {
-        grid-template-columns: 1fr !important;
-    }
-}
     </style>
 </head>
 <body>
-    <header>
-        <div class="header-content">
-            <div class="logo">
-                <img src="./img/logo.jpg" alt="渝适之家Logo">
-                <h1>渝适之家 - 关爱老年人</h1>
-            </div>
-            <nav>
-                <a href="#about-us"><i class="fas fa-info-circle"></i> 关于我们</a>
-                <a href="#services"><i class="fas fa-hand-holding-heart"></i> 服务概述</a>
-                <a href="#features"><i class="fas fa-star"></i> 平台特色</a>
-                <a href="#audience"><i class="fas fa-users"></i> 目标群体</a>
-                <a href="#vision"><i class="fas fa-eye"></i> 长期愿景</a>
-                <a href="#contact"><i class="fas fa-envelope"></i> 联系我们</a>
-            </nav>
+
+    <div id="login-screen">
+        <h1>员工考勤管理系统</h1>
+        <div class="form-group">
+            <label for="username">用户名:</label>
+            <input type="text" id="username" placeholder="请输入用户名" value="hongrx">
         </div>
-    </header>
-
-    <div class="container">
-        <section id="about-us" class="section">
-            <h2>关于我们</h2>
-            <div class="about-section-container">
-                <div class="about-text-content">
-                    <p class="highlight-text">渝适之家——您身边的专业陪护服务平台</p>
-                    
-                    <div class="text-block">
-                        <h3><i class="fas fa-heart"></i> 我们的使命</h3>
-                        <p>渝适之家致力于打造专业可靠的老年人陪护服务中介平台。</p>
-                        <p>我们深知每位老人都值得享受高品质的晚年生活，因此精心搭建这座连接需求与服务的桥梁。</p>
-                    </div>
-                    
-                    <div class="text-block">
-                        <h3><i class="fas fa-handshake"></i> 开放共赢</h3>
-                        <p>我们欢迎各类具备爱心和能力的个人或机构加入平台：</p>
-                        <ul>
-                            <li>专业护理人员可以充分发挥专业特长</li>
-                            <li>有爱心的社会人士能够灵活参与陪护服务</li>
-                            <li>专业机构可以拓展服务渠道</li>
-                        </ul>
-                    </div>
-        
-                    <div class="text-block">
-                        <h3><i class="fas fa-shield-alt"></i> 品质保障</h3>
-                        <p>渝适之家以严格的标准确保服务质量：</p>
-                        <ul>
-                            <li>完善的人员审核机制</li>
-                            <li>专业的技能认证体系</li>
-                            <li>全方位的服务监督制度</li>
-                        </ul>
-                    </div>
-                </div>
-                
-                <div class="about-image-slider">
-                    <img src="./img/about1.jpg" alt="关于我们-1">
-                    <img src="./img/about2.jpg" alt="关于我们-2">
-                    <img src="./img/about3.jpg" alt="关于我们-3">
-                    <div class="dots-container">
-                        <span class="dot"></span>
-                        <span class="dot"></span>
-                        <span class="dot"></span>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <section id="services" class="section">
-            <h2>服务概述</h2>
-            <div class="services-categories">
-                <!-- 护理工作人员类别 -->
-                <div class="service-category">
-                    <h3 class="category-title">各层护理人员</h3>
-                    <div class="services-grid">
-                        <!-- 高级护理师卡片 -->
-                        <div class="service-card">
-                            <div class="service-images">
-                                <img src="./img/G1.jpg" alt="高级护理师">
-                                <img src="./img/G2.jpg" alt="高级护理师工作场景">
-                                <img src="./img/G3.jpg" alt="专业照护">
-                            </div>
-                            <div class="service-content">
-                                <h3><i class="fas fa-user-md"></i> 高级护理师</h3>
-                                <p class="service-description">具备专业医疗护理资质的高级护理人员</p>
-                                
-                                <div class="service-details">
-                                    <h4><i class="fas fa-stethoscope"></i> 专业医疗护理</h4>
-                                    <div class="service-tags">
-                                        <span class="service-tag">伤口护理</span>
-                                        <span class="service-tag">静脉输液</span>
-                                        <span class="service-tag">吸痰护理</span>
-                                        <span class="service-tag">管路护理</span>
-                                        <span class="service-tag">造口护理</span>
-                                        <span class="service-tag">气管护理</span>
-                                    </div>
-                                    
-                                    <h4><i class="fas fa-heartbeat"></i> 康复训练</h4>
-                                    <div class="service-tags">
-                                        <span class="service-tag">肢体康复</span>
-                                        <span class="service-tag">术后恢复</span>
-                                        <span class="service-tag">功能训练</span>
-                                        <span class="service-tag">康复指导</span>
-                                        <span class="service-tag">呼吸训练</span>
-                                        <span class="service-tag">运动恢复</span>
-                                    </div>
-                                    
-                                    <h4><i class="fas fa-notes-medical"></i> 健康管理</h4>
-                                    <div class="service-tags">
-                                        <span class="service-tag">健康评估</span>
-                                        <span class="service-tag">用药指导</span>
-                                        <span class="service-tag">营养建议</span>
-                                        <span class="service-tag">健康监测</span>
-                                        <span class="service-tag">并发症预防</span>
-                                        <span class="service-tag">健康教育</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-        
-                        <!-- 专业护工卡片 -->
-                        <div class="service-card">
-                            <div class="service-images">
-                                <img src="./img/Z1.jpg" alt="专业护工">
-                                <img src="./img/Z2.jpg" alt="护工服务场景">
-                                <img src="./img/Z3.jpg" alt="日常护理">
-                            </div>
-                            <div class="service-content">
-                                <h3><i class="fas fa-user-nurse"></i> 专业护工</h3>
-                                <p class="service-description">经过专业培训的医疗护理人员</p>
-                                
-                                <div class="service-details">
-                                    <h4><i class="fas fa-hand-holding-medical"></i> 基础医疗护理</h4>
-                                    <div class="service-tags">
-                                        <span class="service-tag">血压监测</span>
-                                        <span class="service-tag">血糖检测</span>
-                                        <span class="service-tag">体温监测</span>
-                                        <span class="service-tag">用药提醒</span>
-                                        <span class="service-tag">简单换药</span>
-                                        <span class="service-tag">皮肤护理</span>
-                                    </div>
-        
-                                    <h4><i class="fas fa-procedures"></i> 专业生活照护</h4>
-                                    <div class="service-tags">
-                                        <span class="service-tag">翻身拍背</span>
-                                        <span class="service-tag">床椅转移</span>
-                                        <span class="service-tag">压疮预防</span>
-                                        <span class="service-tag">管路照护</span>
-                                        <span class="service-tag">排痰护理</span>
-                                        <span class="service-tag">造口护理</span>
-                                    </div>
-        
-                                    <h4><i class="fas fa-walking"></i> 康复辅助</h4>
-                                    <div class="service-tags">
-                                        <span class="service-tag">助行训练</span>
-                                        <span class="service-tag">肢体活动</span>
-                                        <span class="service-tag">站立训练</span>
-                                        <span class="service-tag">康复陪同</span>
-                                        <span class="service-tag">运动指导</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-        
-                        <!-- 生活护理员卡片 -->
-                        <div class="service-card">
-                            <div class="service-images">
-                                <img src="./img/R1.jpg" alt="生活护理员">
-                                <img src="./img/R3.jpg" alt="生活照料场景">
-                                <img src="./img/R2.jpg" alt="日常陪护">
-                            </div>
-                            <div class="service-content">
-                                <h3><i class="fas fa-hands-helping"></i> 生活护理员</h3>
-                                <p class="service-description">提供全方位生活照料服务的护理人员</p>
-                                
-                                <div class="service-details">
-                                    <h4><i class="fas fa-bed"></i> 日常照料</h4>
-                                    <div class="service-tags">
-                                        <span class="service-tag">清洁护理</span>
-                                        <span class="service-tag">穿衣整理</span>
-                                        <span class="service-tag">床单更换</span>
-                                        <span class="service-tag">个人卫生</span>
-                                        <span class="service-tag">洗漱协助</span>
-                                        <span class="service-tag">如厕照料</span>
-                                    </div>
-        
-                                    <h4><i class="fas fa-utensils"></i> 饮食照护</h4>
-                                    <div class="service-tags">
-                                        <span class="service-tag">膳食准备</span>
-                                        <span class="service-tag">协助进食</span>
-                                        <span class="service-tag">营养搭配</span>
-                                        <span class="service-tag">特殊饮食</span>
-                                        <span class="service-tag">餐具清洁</span>
-                                    </div>
-        
-                                    <h4><i class="fas fa-broom"></i> 居家服务</h4>
-                                    <div class="service-tags">
-                                        <span class="service-tag">环境整理</span>
-                                        <span class="service-tag">衣物洗护</span>
-                                        <span class="service-tag">室内消毒</span>
-                                        <span class="service-tag">垃圾处理</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-        
-                <!-- 需求陪护类别 -->
-                <div class="service-category">
-                    <h3 class="category-title">陪护服务类型</h3>
-                    <div class="services-grid">
-                        <!-- 医疗陪护卡片 -->
-                        <div class="service-card">
-                            <div class="service-images">
-                                <img src="./img/H.webp" alt="医疗陪护">
-                                <img src="./img/h2.jpg" alt="专业医疗服务">
-                                <img src="./img/h3.webp" alt="康复护理">
-                            </div>
-                            <div class="service-content">
-                                <h3><i class="fas fa-hospital"></i> 医疗陪护</h3>
-                                <p class="service-description">全方位的医疗护理支持服务</p>
-                                
-                                <div class="service-details">
-                                    <h4><i class="fas fa-procedures"></i> 住院陪护</h4>
-                                    <div class="service-tags">
-                                        <span class="service-tag">24小时陪护</span>
-                                        <span class="service-tag">术后护理</span>
-                                        <span class="service-tag">病情观察</span>
-                                        <span class="service-tag">医嘱执行</span>
-                                        <span class="service-tag">检查陪同</span>
-                                        <span class="service-tag">治疗协助</span>
-                                    </div>
-        
-                                    <h4><i class="fas fa-file-medical"></i> 就医服务</h4>
-                                    <div class="service-tags">
-                                        <span class="service-tag">预约挂号</span>
-                                        <span class="service-tag">陪诊服务</span>
-                                        <span class="service-tag">取送报告</span>
-                                        <span class="service-tag">药品代购</span>
-                                        <span class="service-tag">病历整理</span>
-                                    </div>
-        
-                                    <h4><i class="fas fa-ambulance"></i> 急救协助</h4>
-                                    <div class="service-tags">
-                                        <span class="service-tag">紧急联络</span>
-                                        <span class="service-tag">病情报告</span>
-                                        <span class="service-tag">转院陪同</span>
-                                        <span class="service-tag">急救配合</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-        
-                        <!-- 生活陪护卡片 -->
-                        <div class="service-card">
-                            <div class="service-images">
-                                <img src="./img/Daily1.jpeg" alt="生活陪护">
-                                <img src="./img/daily2.jpeg" alt="日常照料">
-                                <img src="./img/daily3.webp" alt="起居照料">
-                            </div>
-                            <div class="service-content">
-                                <h3><i class="fas fa-home"></i> 生活陪护</h3>
-                                <p class="service-description">贴心的生活便利服务支持</p>
-                                
-                                <div class="service-details">
-                                    <h4><i class="fas fa-tasks"></i> 日常代办</h4>
-                                    <div class="service-tags">
-                                        <span class="service-tag">取送快递</span>
-                                        <span class="service-tag">代购物品</span>
-                                        <span class="service-tag">缴费服务</span>
-                                        <span class="service-tag">预约服务</span>
-                                        <span class="service-tag">文件代办</span>
-                                    </div>
-        
-                                    <h4><i class="fas fa-car"></i> 外出协助</h4>
-                                    <div class="service-tags">
-                                        <span class="service-tag">散步陪同</span>
-                                        <span class="service-tag">购物陪同</span>
-                                        <span class="service-tag">就医接送</span>
-                                        <span class="service-tag">轮椅推行</span>
-                                        <span class="service-tag">交通协助</span>
-                                    </div>
-        
-                                    <h4><i class="fas fa-calendar-check"></i> 生活规划</h4>
-                                    <div class="service-tags">
-                                        <span class="service-tag">作息安排</span>
-                                        <span class="service-tag">活动计划</span>
-                                        <span class="service-tag">日程提醒</span>
-                                        <span class="service-tag">用药提醒</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-        
-                        <!-- 精神陪护卡片 -->
-                        <div class="service-card">
-                            <div class="service-images">
-                                <img src="./img/life1.webp" alt="精神陪护">
-                                <img src="./img/life2.webp" alt="情感陪伴">
-                                <img src="./img/life3.webp" alt="社交活动">
-                            </div>
-                            <div class="service-content">
-                                <h3><i class="fas fa-heart"></i> 精神陪护</h3>
-                                <p class="service-description">专业的心理支持与情感陪伴服务</p>
-                                
-                                <div class="service-details">
-                                    <h4><i class="fas fa-comments"></i> 情感陪伴</h4>
-                                    <div class="service-tags">
-                                        <span class="service-tag">聊天倾听</span>
-                                        <span class="service-tag">情绪疏导</span>
-                                        <span class="service-tag">心理安抚</span>
-                                        <span class="service-tag">生活分享</span>
-                                        <span class="service-tag">兴趣交流</span>
-                                    </div>
-        
-                                    <h4><i class="fas fa-users"></i> 社交活动</h4>
-                                    <div class="service-tags">
-                                        <span class="service-tag">娱乐陪伴</span>
-                                        <span class="service-tag">棋牌活动</span>
-                                        <span class="service-tag">户外散步</span>
-                                        <span class="service-tag">园艺活动</span>
-                                        <span class="service-tag">读书交流</span>
-                                    </div>
-        
-                                    <h4><i class="fas fa-brain"></i> 能力培养</h4>
-                                    <div class="service-tags">
-                                        <span class="service-tag">兴趣培养</span>
-                                        <span class="service-tag">技能学习</span>
-                                        <span class="service-tag">认知训练</span>
-                                        <span class="service-tag">记忆力练习</span>
-                                        <span class="service-tag">手工活动</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-                <!-- 特殊照护服务类别 -->
-                <div class="service-category">
-                    <h3 class="category-title">特殊照护服务</h3>
-                    <div class="services-grid">
-                        <!-- 专项陪护卡片 -->
-                        <div class="service-card">
-                            <div class="service-images">
-                                <img src="./img/T10.jpg" alt="专项陪护">
-                                <img src="./img/T13.jpg" alt="特殊照护">
-                                <img src="./img/T11.jpg" alt="专业服务">
-                            </div>
-                            <div class="service-content">
-                                <h3><i class="fas fa-star"></i> 专项陪护</h3>
-                                <p class="service-description">特殊群体的专业照护服务</p>
-                                
-                                <div class="service-details">
-                                    <h4><i class="fas fa-brain"></i> 失智照护</h4>
-                                    <div class="service-tags">
-                                        <span class="service-tag">安全看护</span>
-                                        <span class="service-tag">行为引导</span>
-                                        <span class="service-tag">情绪安抚</span>
-                                        <span class="service-tag">认知训练</span>
-                                        <span class="service-tag">生活指导</span>
-                                        <span class="service-tag">走失预防</span>
-                                    </div>
-
-                                    <h4><i class="fas fa-wheelchair"></i> 瘫痪照护</h4>
-                                    <div class="service-tags">
-                                        <span class="service-tag">体位转移</span>
-                                        <span class="service-tag">肢体护理</span>
-                                        <span class="service-tag">按摩保健</span>
-                                        <span class="service-tag">康复训练</span>
-                                        <span class="service-tag">并发预防</span>
-                                        <span class="service-tag">辅具使用</span>
-                                    </div>
-
-                                    <h4><i class="fas fa-baby"></i> 母婴照护</h4>
-                                    <div class="service-tags">
-                                        <span class="service-tag">产妇护理</span>
-                                        <span class="service-tag">新生儿照料</span>
-                                        <span class="service-tag">月子餐准备</span>
-                                        <span class="service-tag">催乳指导</span>
-                                        <span class="service-tag">婴儿护理</span>
-                                        <span class="service-tag">产后恢复</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- 重症监护卡片 -->
-                        <div class="service-card">
-                            <div class="service-images">
-                                <img src="./img/T21.jpg" alt="重症监护">
-                                <img src="./img/T22.jpg" alt="专业医疗">
-                                <img src="./img/T23.jpg" alt="重症照护">
-                            </div>
-                            <div class="service-content">
-                                <h3><i class="fas fa-heartbeat"></i> 重症监护</h3>
-                                <p class="service-description">专业的重症患者照护服务</p>
-                                
-                                <div class="service-details">
-                                    <h4><i class="fas fa-procedures"></i> 生命监护</h4>
-                                    <div class="service-tags">
-                                        <span class="service-tag">生命体征监测</span>
-                                        <span class="service-tag">呼吸管理</span>
-                                        <span class="service-tag">心率监测</span>
-                                        <span class="service-tag">血氧监测</span>
-                                        <span class="service-tag">意识观察</span>
-                                        <span class="service-tag">并发症预防</span>
-                                    </div>
-
-                                    <h4><i class="fas fa-syringe"></i> 治疗配合</h4>
-                                    <div class="service-tags">
-                                        <span class="service-tag">用药管理</span>
-                                        <span class="service-tag">伤口护理</span>
-                                        <span class="service-tag">管路护理</span>
-                                        <span class="service-tag">吸痰护理</span>
-                                        <span class="service-tag">营养支持</span>
-                                        <span class="service-tag">康复训练</span>
-                                    </div>
-
-                                    <h4><i class="fas fa-clipboard-list"></i> 专业照护</h4>
-                                    <div class="service-tags">
-                                        <span class="service-tag">无菌操作</span>
-                                        <span class="service-tag">体位护理</span>
-                                        <span class="service-tag">皮肤护理</span>
-                                        <span class="service-tag">管路维护</span>
-                                        <span class="service-tag">排痰护理</span>
-                                        <span class="service-tag">并发症观察</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- 临终关怀卡片 -->
-                        <div class="service-card">
-                            <div class="service-images">
-                                <img src="./img/T31.jpg" alt="临终关怀">
-                                <img src="./img/T32.jpg" alt="舒适照护">
-                                <img src="./img/T33.jpg" alt="专业服务">
-                            </div>
-                            <div class="service-content">
-                                <h3><i class="fas fa-dove"></i> 临终关怀</h3>
-                                <p class="service-description">专业的生命末期照护服务</p>
-                                
-                                <div class="service-details">
-                                    <h4><i class="fas fa-hand-holding-heart"></i> 舒适照护</h4>
-                                    <div class="service-tags">
-                                        <span class="service-tag">疼痛管理</span>
-                                        <span class="service-tag">症状控制</span>
-                                        <span class="service-tag">舒适护理</span>
-                                        <span class="service-tag">营养支持</span>
-                                        <span class="service-tag">卫生清洁</span>
-                                        <span class="service-tag">体位护理</span>
-                                    </div>
-
-                                    <h4><i class="fas fa-hands-helping"></i> 心理支持</h4>
-                                    <div class="service-tags">
-                                        <span class="service-tag">情感陪伴</span>
-                                        <span class="service-tag">哀伤辅导</span>
-                                        <span class="service-tag">心理疏导</span>
-                                        <span class="service-tag">家属支持</span>
-                                        <span class="service-tag">临终关怀</span>
-                                        <span class="service-tag">心愿达成</span>
-                                    </div>
-
-                                    <h4><i class="fas fa-praying-hands"></i> 善终服务</h4>
-                                    <div class="service-tags">
-                                        <span class="service-tag">生命教育</span>
-                                        <span class="service-tag">遗愿完成</span>
-                                        <span class="service-tag">临终陪伴</span>
-                                        <span class="service-tag">后事指导</span>
-                                        <span class="service-tag">礼仪服务</span>
-                                        <span class="service-tag">悼念支持</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                
-                   
-            </div>
-        </section>
-
-        <section id="features" class="section">
-            <h2>平台特色</h2>
-            <div class="features-grid">
-                <!-- 原有特色 -->
-                <div class="feature-item">
-                    <i class="fas fa-user-check"></i>
-                    <h3>严格筛选</h3>
-                    <p>所有护工均经过严格培训与背景审查</p>
-                </div>
-                <div class="feature-item">
-                    <i class="fas fa-shield-alt"></i>
-                    <h3>安全保障</h3>
-                    <p>全程保险覆盖，确保服务安全</p>
-                </div>
-                <div class="feature-item">
-                    <i class="fas fa-star"></i>
-                    <h3>服务评价</h3>
-                    <p>透明的评价体系，保证服务质量</p>
-                </div>
-                <div class="feature-item">
-                    <i class="fas fa-clock"></i>
-                    <h3>24小时响应</h3>
-                    <p>全天候客服支持，及时解决问题</p>
-                </div>
-                
-                <!-- 新增特色 -->
-                <div class="feature-item">
-                    <i class="fas fa-calendar-alt"></i>
-                    <h3>灵活参与</h3>
-                    <p>自由选择服务时间，灵活安排陪护工作</p>
-                </div>
-                <div class="feature-item">
-                    <i class="fas fa-robot"></i>
-                    <h3>智能匹配</h3>
-                    <p>基于AI算法，精准匹配最适合的服务人员</p>
-                </div>
-                <div class="feature-item">
-                    <i class="fas fa-users-cog"></i>
-                    <h3>个性化定制</h3>
-                    <p>根据个人需求，定制专属陪护方案</p>
-                </div>
-                <div class="feature-item">
-                    <i class="fas fa-comments"></i>
-                    <h3>社区支持</h3>
-                    <p>在线交流平台，随时沟通解决问题</p>
-                </div>
-            </div>
-        </section>
-
-        <section id="audience" class="section">
-            <h2>目标群体</h2>
-            <div class="features-grid">
-                <div class="feature-item">
-                    <i class="fas fa-user-friends"></i>
-                    <h3>老年人及其家属</h3>
-                    <p>需要专业陪护服务的老年人及其家庭成员，为其提供全方位的照护解决方案</p>
-                </div>
-                <div class="feature-item">
-                    <i class="fas fa-user-nurse"></i>
-                    <h3>陪护服务人员</h3>
-                    <p>专业护理人员、持证护工以及有爱心想参与陪护工作的社会人士</p>
-                </div>
-                <div class="feature-item">
-                    <i class="fas fa-hospital"></i>
-                    <h3>护理机构</h3>
-                    <p>养老院、康复中心等专业护理机构，助力扩展服务范围</p>
-                </div>
-                <div class="feature-item">
-                    <i class="fas fa-users"></i>
-                    <h3>其他需求群体</h3>
-                    <p>康复患者、特殊人群等需要临时或长期陪护服务的个人或家庭</p>
-                </div>
-            </div>
-        </section>
-
-        <section id="vision" class="section">
-            <h2>长期愿景</h2>
-            <div class="vision-container">
-                <div class="features-grid" style="grid-template-columns: repeat(3, 1fr);">
-                    <div class="feature-item">
-                        <i class="fas fa-heart"></i>
-                        <h3>构建关爱社会</h3>
-                        <p>打造一个人人都能参与、人人都受益的互助平台</p>
-                    </div>
-                    <div class="feature-item">
-                        <i class="fas fa-hands-helping"></i>
-                        <h3>便捷参与</h3>
-                        <p>让有意愿的人都能轻松加入陪护服务行列</p>
-                    </div>
-                    <div class="feature-item">
-                        <i class="fas fa-gem"></i>
-                        <h3>优质选择</h3>
-                        <p>为老年人提供多样化、高品质的陪护服务选项</p>
-                    </div>
-                    <div class="feature-item">
-                        <i class="fas fa-certificate"></i>
-                        <h3>行业规范</h3>
-                        <p>推动陪护服务行业的职业化、标准化发展</p>
-                    </div>
-                    <div class="feature-item">
-                        <i class="fas fa-shield-alt"></i>
-                        <h3>安全可靠</h3>
-                        <p>建立完善的安全保障体系，打造值得信赖的服务平台</p>
-                    </div>
-                    <div class="feature-item">
-                        <i class="fas fa-comments"></i>
-                        <h3>促进互动</h3>
-                        <p>增进人与人之间的理解与关怀，创造温暖和谐的社会氛围</p>
-                    </div>
-                </div>
-            </div>
-
-        <section id="contact" class="section">
-            <h2>联系我们</h2>
-            <div class="contact-grid">
-                <div class="contact-info-container">
-                    <div class="contact-info">
-                        <i class="fas fa-phone"></i>
-                        <div>
-                            <h3>电话咨询</h3>
-                            <p>123-456-7890</p>
-                            <p>服务时间：周一至周日 8:00-20:00</p>
-                        </div>
-                    </div>
-                    <div class="contact-info">
-                        <i class="fas fa-envelope"></i>
-                        <div>
-                            <h3>邮件咨询</h3>
-                            <p>info@yushizhijia.com</p>
-                            <p>24小时内回复</p>
-                        </div>
-                    </div>
-                    <div class="contact-info">
-                        <i class="fas fa-map-marker-alt"></i>
-                        <div>
-                            <h3>办公地址</h3>
-                            <p>重庆市渝中区</p>
-                            <p>欢迎实地考察</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="qr-codes-container" style="background: rgba(255, 152, 0, 0.05); padding: 20px; border-radius: 10px;">
-                    <h3 style="color: var(--primary-color); margin-bottom: 20px; text-align: center;">关注我们</h3>
-                    <div class="qr-codes-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                        <!-- 公众号二维码 -->
-                        <div class="qr-code-item" style="text-align: center;">
-                            <div class="qr-code-wrapper" style="background: white; padding: 15px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-                                <img src="./img/GZH.jpg" alt="公众号二维码" style="width: 150px; height: 150px; margin-bottom: 10px;">
-                                <h4 style="color: var(--primary-color); margin: 10px 0;">关注公众号</h4>
-                                <p style="font-size: 14px; color: #666;">及时获取相关资讯</p>
-                                <p style="font-size: 14px; color: #666;">享受更多专属服务</p>
-                            </div>
-                        </div>
-                        <!-- 小程序二维码 -->
-                        <div class="qr-code-item" style="text-align: center;">
-                            <div class="qr-code-wrapper" style="background: white; padding: 15px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-                                <img src="/api/placeholder/150/150" alt="小程序二维码" style="width: 150px; height: 150px; margin-bottom: 10px;">
-                                <h4 style="color: var(--primary-color); margin: 10px 0;">打开小程序</h4>
-                                <p style="font-size: 14px; color: #666;">便捷预约服务</p>
-                                <p style="font-size: 14px; color: #666;">轻松管理订单</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
+        <div class="form-group">
+            <label for="password">密码:</label>
+            <input type="password" id="password" placeholder="请输入密码" value="hrx1231">
+        </div>
+        <button id="login-btn" class="primary-button">登录</button>
     </div>
 
-    <footer>
-        <div style="max-width: 1400px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 30px; text-align: left; padding: 40px 20px;">
-            <div>
-                <h3 style="color: var(--primary-color); margin-bottom: 15px;">关于渝适之家</h3>
-                <p>专注于提供优质老年护理服务，致力于让每位老年人享受幸福晚年。</p>
+    <div id="main-app" class="container hidden">
+        <div class="main-layout">
+            <aside class="sidebar">
+                <h2 class="panel-title">系统设置</h2>
+
+                <div class="settings-card">
+                    <h3 class="card-title">公休设置</h3>
+                    <div class="form-group">
+                        <label for="default-annual-leave">默认公休天数:</label>
+                        <input type="number" step="0.5" min="0" id="default-annual-leave" placeholder="默认公休天数">
+                    </div>
+                    <button id="apply-annual-btn" class="primary-button" style="width: 100%;">应用到所有在职员工</button>
+                </div>
+
+                <div class="settings-card">
+                    <h3 class="card-title">统计设置</h3>
+                    <div class="form-group">
+                        <label for="stats-year">年份:</label>
+                        <select id="stats-year"></select>
+                    </div>
+                    <div class="form-group">
+                        <label for="stats-month">月份:</label>
+                        <select id="stats-month">
+                            <option value="全部">全部</option>
+                        </select>
+                    </div>
+                    <button id="calc-stats-btn" class="primary-button" style="width: 100%; margin-bottom: 10px;">计算统计</button>
+                    <textarea id="stats-result" readonly></textarea>
+                </div>
+
+                <div class="settings-card">
+                    <h3 class="card-title">数据备份与恢复</h3>
+                    <div class="form-group">
+                        <button id="backup-btn" class="primary-button" style="width: 100%; margin-bottom: 15px;">备份数据 (JSON)</button>
+                    </div>
+                    <div class="form-group">
+                        <label for="restore-emp-file">恢复员工数据 (JSON):</label>
+                        <input type="file" id="restore-emp-file" accept=".json" style="width: 100%;">
+                    </div>
+                    <div class="form-group">
+                        <label for="restore-att-file">恢复考勤数据 (JSON):</label>
+                        <input type="file" id="restore-att-file" accept=".json" style="width: 100%;">
+                    </div>
+                    <button id="restore-btn" class="primary-button" style="width: 100%;">恢复选中数据</button>
+                </div>
+
+            </aside>
+
+            <main class="content">
+                <nav class="tab-nav">
+                    <button class="tab-button active" data-tab="employee-tab">员工管理</button>
+                    <button class="tab-button" data-tab="attendance-tab">考勤管理</button>
+                </nav>
+
+                <div id="employee-tab" class="tab-content">
+                    <div class="card">
+                        <div class="form-group-inline">
+                            <input type="text" id="search-emp-id" placeholder="工号搜索">
+                            <input type="text" id="search-emp-name" placeholder="姓名搜索">
+                            <select id="search-emp-position">
+                                <option value="全部">全部职位</option>
+                                <option>医师</option>
+                                <option>技师</option>
+                                <option>护士</option>
+                                <option>其他</option>
+                            </select>
+                            <button id="search-emp-btn" class="secondary-button">搜索</button>
+                            <button id="add-emp-btn" class="primary-button">添加员工</button>
+                            <button id="export-csv-btn" class="primary-button">导出CSV</button>
+                        </div>
+                    </div>
+                    <div class="table-container">
+                        <table id="emp-table">
+                            <thead>
+                                <tr>
+                                    <th>工号</th>
+                                    <th>姓名</th>
+                                    <th>职位</th>
+                                    <th>剩余补休(天)</th>
+                                    <th>剩余公休(天)</th>
+                                    <th>累计请假(天)</th>
+                                    <th>状态</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="attendance-tab" class="tab-content hidden">
+                    <div class="card">
+                        <div class="form-group-inline">
+                            <label>年份:</label>
+                            <select id="filter-att-year"></select>
+                            <label>月份:</label>
+                            <select id="filter-att-month">
+                                <option value="全部">全部</option>
+                            </select>
+                            <label>类型:</label>
+                            <select id="filter-att-type">
+                                <option value="全部">全部</option>
+                                <option>加班</option>
+                                <option>调休</option>
+                                <option>公休</option>
+                                <option>病事假</option>
+                            </select>
+                            <button id="filter-att-btn" class="secondary-button">筛选</button>
+                            <button id="add-attendance-btn" class="primary-button">批量添加考勤</button>
+                        </div>
+                    </div>
+                    <div class="table-container">
+                        <table id="attendance-table">
+                            <thead>
+                                <tr>
+                                    <th>工号</th>
+                                    <th>姓名</th>
+                                    <th>日期</th>
+                                    <th>类型</th>
+                                    <th>天数</th>
+                                    <th>原因</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                </tbody>
+                        </table>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <div id="employee-modal" class="modal hidden">
+        <div class="modal-content" style="width: 900px;">
+            <div class="modal-header">
+                <h2 id="employee-modal-title" class="modal-title">员工信息</h2>
+                <button class="modal-close" onclick="closeModal('employee-modal')">&times;</button>
             </div>
-            <div>
-                <h3 style="color: var(--primary-color); margin-bottom: 15px;">快速链接</h3>
-                <div style="display: grid; gap: 10px;">
-                    <a href="#services" style="color: white; text-decoration: none;">服务介绍</a>
-                    <a href="#features" style="color: white; text-decoration: none;">平台特色</a>
-                    <a href="#contact" style="color: white; text-decoration: none;">联系我们</a>
+            <div class="modal-body">
+                <div class="card">
+                    <h3 class="card-title">基本信息</h3>
+                    <div id="employee-resigned-indicator" class="hidden">
+                        <div class="resigned-label">此员工已标记为离职</div>
+                    </div>
+                    <div class="employee-detail-grid">
+                        <label>工号:</label>
+                        <span id="modal-emp-id-display"></span>
+                        <input type="text" id="modal-emp-id" class="hidden">
+
+                        <label>姓名:</label>
+                        <input type="text" id="modal-emp-name">
+
+                        <label>职位:</label>
+                        <select id="modal-emp-position">
+                            <option>医师</option>
+                            <option>技师</option>
+                            <option>护士</option>
+                            <option>其他</option>
+                        </select>
+
+                        <label>剩余补休:</label>
+                        <input type="number" step="0.1" id="modal-emp-leave">
+
+                        <label>剩余公休:</label>
+                        <input type="number" step="0.1" id="modal-emp-annual">
+
+                        <label>累计请假:</label>
+                        <input type="number" step="0.1" id="modal-emp-sick" readonly>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3 class="card-title">考勤记录</h3>
+                    <div class="form-group-inline" style="margin-bottom: 15px;">
+                        <label>年份:</label>
+                        <select id="modal-record-year"></select>
+                        <label>月份:</label>
+                        <select id="modal-record-month">
+                            <option value="全部">全部</option>
+                        </select>
+                        <button id="modal-filter-records-btn" class="secondary-button" style="min-width: 80px;">筛选</button>
+                        <div style="flex-grow: 1;"></div> <div id="modal-stats-label" style="font-size: 13px; color: var(--dark-gray); background-color: var(--blue-light); padding: 8px 12px; border-radius: 4px;">统计:</div>
+                    </div>
+
+                    <nav class="tab-nav" style="margin-bottom: 0;">
+                        <button class="tab-button active" data-record-tab="comp-records">补休记录</button>
+                        <button class="tab-button" data-record-tab="annual-records">公休记录</button>
+                        <button class="tab-button" data-record-tab="leave-records">请假记录</button>
+                    </nav>
+                    <div class="table-container" style="max-height: 250px; border-top: none; border-radius: 0 0 4px 4px;">
+                        <div id="comp-records" class="record-tab-content">
+                            <table id="modal-comp-table">
+                                <thead><tr><th>日期</th><th>类型</th><th>天数</th><th>原因</th></tr></thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                        <div id="annual-records" class="record-tab-content hidden">
+                            <table id="modal-annual-table">
+                                <thead><tr><th>日期</th><th>类型</th><th>天数</th><th>原因</th></tr></thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                        <div id="leave-records" class="record-tab-content hidden">
+                            <table id="modal-leave-table">
+                                <thead><tr><th>日期</th><th>类型</th><th>天数</th><th>原因</th></tr></thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <div>
-                <h3 style="color: var(--primary-color); margin-bottom: 15px;">关注我们</h3>
-                <div style="display: flex; gap: 15px;">
-                    <i class="fab fa-weixin fa-2x"></i>
-                    <i class="fab fa-weibo fa-2x"></i>
-                </div>
+            <div class="modal-footer">
+                <button id="resign-emp-btn" class="warning-button">标记为离职</button>
+                <button id="delete-emp-btn" class="danger-button">删除员工</button>
+                <button id="save-emp-btn" class="primary-button">保存</button>
+                <button class="secondary-button" onclick="closeModal('employee-modal')">取消</button>
             </div>
         </div>
-        <div style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px; margin-top: 20px;">
-            <p>© 2024 渝适之家 | 专注于老年人陪护服务 | ICP备案号：xxxxx</p>
+    </div>
+
+    <div id="batch-attendance-modal" class="modal hidden">
+        <div class="modal-content" style="width: 1100px; max-width: 95%;">
+            <div class="modal-header">
+                <h2 class="modal-title">批量添加考勤记录</h2>
+                <button class="modal-close" onclick="closeModal('batch-attendance-modal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="batch-attendance-layout">
+                    <div class="card" style="margin-bottom: 0;">
+                        <h3 class="card-title">选择员工 (仅显示在职员工)</h3>
+                        <div class="form-group-inline" style="margin-bottom: 10px;">
+                            <button id="batch-select-all" class="secondary-button">全选</button>
+                            <button id="batch-select-none" class="secondary-button">取消全选</button>
+                            <input type="text" id="batch-search-emp" placeholder="搜索员工..." style="flex-grow: 1;">
+                        </div>
+                        <div id="batch-emp-list-container">
+                            <table id="batch-emp-list">
+                                <thead>
+                                    <tr>
+                                        <th><input type="checkbox" id="batch-select-all-header"></th>
+                                        <th>工号</th>
+                                        <th>姓名</th>
+                                        <th>职位</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="card" style="margin-bottom: 0;">
+                        <h3 class="card-title">考勤信息</h3>
+                        <div class="date-picker-row">
+                            <div>
+                                <label for="batch-start-date">开始日期:</label>
+                                <input type="date" id="batch-start-date">
+                            </div>
+                            <div>
+                                <label for="batch-end-date">结束日期:</label>
+                                <input type="date" id="batch-end-date">
+                            </div>
+                        </div>
+                        <div class="form-group-inline" style="margin-bottom: 15px; gap: 10px 20px;">
+                            <label>类型:</label>
+                            <select id="batch-att-type">
+                                <option>加班</option>
+                                <option>调休</option>
+                                <option>公休</option>
+                                <option>病事假</option>
+                            </select>
+                            <label>天数:</label>
+                            <input type="number" step="0.1" min="0" id="batch-att-days" placeholder="天数">
+                            <label>原因:</label>
+                            <input type="text" id="batch-att-reason" placeholder="原因 (可选)" style="flex-grow: 1;">
+                        </div>
+                        <span id="preview-label"></span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="save-batch-btn" class="primary-button">保存</button>
+                <button class="secondary-button" onclick="closeModal('batch-attendance-modal')">取消</button>
+            </div>
         </div>
-    </footer>
+    </div>
+
+    <div id="edit-attendance-modal" class="modal hidden">
+         <div class="modal-content" style="width: 550px;">
+             <div class="modal-header">
+                 <h2 class="modal-title">编辑考勤记录</h2>
+                 <button class="modal-close" onclick="closeModal('edit-attendance-modal')">&times;</button>
+             </div>
+             <div class="modal-body">
+                 <div class="card" style="box-shadow: none; border: none; padding: 0;">
+                     <div class="form-row">
+                         <label>员工:</label>
+                         <span id="edit-att-emp-info" style="font-weight: bold;"></span>
+                     </div>
+                     <div class="form-row">
+                         <label>日期:</label>
+                         <span id="edit-att-date" style="font-weight: bold;"></span>
+                     </div>
+                     <div class="form-row">
+                         <label for="edit-att-type">类型:</label>
+                         <select id="edit-att-type">
+                             <option>加班</option>
+                             <option>调休</option>
+                             <option>公休</option>
+                             <option>病事假</option>
+                         </select>
+                     </div>
+                     <div class="form-row">
+                         <label for="edit-att-days">天数:</label>
+                         <input type="number" step="0.1" min="0" id="edit-att-days">
+                     </div>
+                     <div class="form-row">
+                         <label for="edit-att-reason">原因:</label>
+                         <input type="text" id="edit-att-reason">
+                     </div>
+                 </div>
+             </div>
+             <div class="modal-footer">
+                  <button id="delete-att-btn" class="danger-button">删除记录</button>
+                  <button id="save-edit-att-btn" class="primary-button">保存</button>
+                  <button class="secondary-button" onclick="closeModal('edit-attendance-modal')">取消</button>
+              </div>
+          </div>
+      </div>
+
+    <div id="export-modal" class="modal hidden">
+         <div class="modal-content" style="width: 700px;">
+             <div class="modal-header">
+                 <h2 class="modal-title">导出考勤统计 (CSV)</h2>
+                 <button class="modal-close" onclick="closeModal('export-modal')">&times;</button>
+             </div>
+             <div class="modal-body">
+                 <p style="margin-bottom: 20px;">请选择要导出的考勤记录时间范围：</p>
+                 <div class="date-picker-row">
+                    <div>
+                        <label for="export-start-date">开始日期:</label>
+                        <input type="date" id="export-start-date">
+                    </div>
+                    <div>
+                         <label for="export-end-date">结束日期:</label>
+                         <input type="date" id="export-end-date">
+                     </div>
+                 </div>
+             </div>
+             <div class="modal-footer">
+                 <button id="confirm-export-btn" class="primary-button">导出</button>
+                 <button class="secondary-button" onclick="closeModal('export-modal')">取消</button>
+             </div>
+         </div>
+     </div>
+
 
     <script>
-        // 平滑滚动效果
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function (e) {
-                e.preventDefault();
-                document.querySelector(this.getAttribute('href')).scrollIntoView({
-                    behavior: 'smooth'
+        // --- Application State ---
+        let employees = {}; // { empId: { name, position, leave_balance, annual_leave_balance, sick_leave_days, is_resigned } }
+        let attendance = {}; // { empId: [ { date, type, hours, reason } ] }
+        let currentEditEmpId = null; // For employee modal
+        let currentEditAttEmpId = null; // For attendance edit modal
+        let currentEditAttDate = null; // For attendance edit modal
+
+        // --- DOM Elements ---
+        const loginScreen = document.getElementById('login-screen');
+        const mainApp = document.getElementById('main-app');
+        const usernameInput = document.getElementById('username');
+        const passwordInput = document.getElementById('password');
+        const loginBtn = document.getElementById('login-btn');
+
+        const tabButtons = document.querySelectorAll('.tab-button');
+        const tabContents = document.querySelectorAll('.tab-content');
+
+        const empTableBody = document.getElementById('emp-table').querySelector('tbody');
+        const attendanceTableBody = document.getElementById('attendance-table').querySelector('tbody');
+
+        // Search/Filter Elements
+        const searchEmpIdInput = document.getElementById('search-emp-id');
+        const searchEmpNameInput = document.getElementById('search-emp-name');
+        const searchEmpPositionSelect = document.getElementById('search-emp-position');
+        const searchEmpBtn = document.getElementById('search-emp-btn');
+        const filterAttYearSelect = document.getElementById('filter-att-year');
+        const filterAttMonthSelect = document.getElementById('filter-att-month');
+        const filterAttTypeSelect = document.getElementById('filter-att-type');
+        const filterAttBtn = document.getElementById('filter-att-btn');
+
+        // Sidebar Elements
+        const defaultAnnualLeaveInput = document.getElementById('default-annual-leave');
+        const applyAnnualBtn = document.getElementById('apply-annual-btn');
+        const statsYearSelect = document.getElementById('stats-year');
+        const statsMonthSelect = document.getElementById('stats-month');
+        const calcStatsBtn = document.getElementById('calc-stats-btn');
+        const statsResultTextarea = document.getElementById('stats-result');
+        const backupBtn = document.getElementById('backup-btn');
+        const restoreEmpFileInput = document.getElementById('restore-emp-file');
+        const restoreAttFileInput = document.getElementById('restore-att-file');
+        const restoreBtn = document.getElementById('restore-btn');
+
+        // Add Buttons
+        const addEmpBtn = document.getElementById('add-emp-btn');
+        const addAttendanceBtn = document.getElementById('add-attendance-btn');
+        const exportCsvBtn = document.getElementById('export-csv-btn');
+
+        // Employee Modal Elements
+        const employeeModal = document.getElementById('employee-modal');
+        const employeeModalTitle = document.getElementById('employee-modal-title');
+        const modalEmpIdInput = document.getElementById('modal-emp-id'); // Hidden input for add mode
+        const modalEmpIdDisplay = document.getElementById('modal-emp-id-display'); // Span for display in edit mode
+        const modalEmpNameInput = document.getElementById('modal-emp-name');
+        const modalEmpPositionSelect = document.getElementById('modal-emp-position');
+        const modalEmpLeaveInput = document.getElementById('modal-emp-leave');
+        const modalEmpAnnualInput = document.getElementById('modal-emp-annual');
+        const modalEmpSickInput = document.getElementById('modal-emp-sick');
+        const employeeResignedIndicator = document.getElementById('employee-resigned-indicator');
+        const saveEmpBtn = document.getElementById('save-emp-btn');
+        const deleteEmpBtn = document.getElementById('delete-emp-btn');
+        const resignEmpBtn = document.getElementById('resign-emp-btn'); // Button to mark as resigned
+        const modalRecordYearSelect = document.getElementById('modal-record-year');
+        const modalRecordMonthSelect = document.getElementById('modal-record-month');
+        const modalFilterRecordsBtn = document.getElementById('modal-filter-records-btn');
+        const modalStatsLabel = document.getElementById('modal-stats-label');
+        const modalRecordTabButtons = employeeModal.querySelectorAll('.tab-nav .tab-button');
+        const modalRecordTabContents = employeeModal.querySelectorAll('.record-tab-content');
+        const modalCompTableBody = document.getElementById('modal-comp-table').querySelector('tbody');
+        const modalAnnualTableBody = document.getElementById('modal-annual-table').querySelector('tbody');
+        const modalLeaveTableBody = document.getElementById('modal-leave-table').querySelector('tbody');
+
+        // Batch Attendance Modal Elements
+        const batchAttendanceModal = document.getElementById('batch-attendance-modal');
+        const batchEmpListBody = document.getElementById('batch-emp-list').querySelector('tbody');
+        const batchSelectAllHeaderCheckbox = document.getElementById('batch-select-all-header');
+        const batchSearchEmpInput = document.getElementById('batch-search-emp');
+        const batchStartDateInput = document.getElementById('batch-start-date');
+        const batchEndDateInput = document.getElementById('batch-end-date');
+        const batchAttTypeSelect = document.getElementById('batch-att-type');
+        const batchAttDaysInput = document.getElementById('batch-att-days');
+        const batchAttReasonInput = document.getElementById('batch-att-reason');
+        const batchPreviewLabel = document.getElementById('preview-label');
+        const saveBatchBtn = document.getElementById('save-batch-btn');
+        const batchSelectAllBtn = document.getElementById('batch-select-all');
+        const batchSelectNoneBtn = document.getElementById('batch-select-none');
+
+        // Edit Attendance Modal Elements
+        const editAttendanceModal = document.getElementById('edit-attendance-modal');
+        const editAttEmpInfoSpan = document.getElementById('edit-att-emp-info');
+        const editAttDateSpan = document.getElementById('edit-att-date');
+        const editAttTypeSelect = document.getElementById('edit-att-type');
+        const editAttDaysInput = document.getElementById('edit-att-days');
+        const editAttReasonInput = document.getElementById('edit-att-reason');
+        const saveEditAttBtn = document.getElementById('save-edit-att-btn');
+        const deleteAttBtn = document.getElementById('delete-att-btn');
+
+        // Export Modal Elements
+        const exportModal = document.getElementById('export-modal');
+        const exportStartDateInput = document.getElementById('export-start-date');
+        const exportEndDateInput = document.getElementById('export-end-date');
+        const confirmExportBtn = document.getElementById('confirm-export-btn');
+
+
+        // --- Utility Functions ---
+
+        /**
+         * Formats a Date object or date string into YYYY-MM-DD format.
+         * @param {Date|string} dateObj - The date to format.
+         * @returns {string} The formatted date string, or empty string if invalid.
+         */
+        function formatDate(dateObj) {
+            if (!dateObj) return '';
+            // Ensure it's a Date object
+            if (!(dateObj instanceof Date)) {
+                dateObj = new Date(dateObj);
+            }
+            // Check if the date is valid
+            if (isNaN(dateObj.getTime())) {
+                console.warn("Invalid date passed to formatDate:", dateObj);
+                return '';
+            }
+            const year = dateObj.getFullYear();
+            const month = (dateObj.getMonth() + 1).toString().padStart(2, '0');
+            const day = dateObj.getDate().toString().padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        /**
+         * Converts days to hours (assuming 8 hours/day).
+         * @param {number|string} days - Number of days.
+         * @returns {number} Equivalent hours.
+         */
+        function daysToHours(days) {
+            return parseFloat(days || 0) * 8;
+        }
+
+        /**
+         * Converts hours to days (assuming 8 hours/day).
+         * @param {number|string} hours - Number of hours.
+         * @returns {number} Equivalent days.
+         */
+        function hoursToDays(hours) {
+            return parseFloat(hours || 0) / 8;
+        }
+
+        /**
+         * Shows a modal dialog by removing its 'hidden' class.
+         * @param {string} modalId - The ID of the modal element.
+         */
+        function showModal(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.classList.remove('hidden');
+            } else {
+                console.error(`Modal with ID "${modalId}" not found.`);
+            }
+        }
+
+        /**
+         * Hides a modal dialog by adding the 'hidden' class.
+         * @param {string} modalId - The ID of the modal element.
+         */
+        function closeModal(modalId) {
+             const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.classList.add('hidden');
+            } else {
+                console.error(`Modal with ID "${modalId}" not found.`);
+            }
+        }
+
+        /**
+         * Displays a simple alert message.
+         * @param {string} message - The message to display.
+         * @param {'info'|'success'|'warning'|'error'} type - The type of alert.
+         */
+        function showAlert(message, type = 'info') {
+            // Using standard alert for simplicity. Replace with a custom UI element if needed.
+            const prefix = type === 'success' ? '✅ ' : type === 'warning' ? '⚠️ ' : type === 'error' ? '❌ ' : 'ℹ️ ';
+            alert(`${prefix}${message}`);
+        }
+
+        /**
+         * Populates a select element with years.
+         * @param {HTMLSelectElement} selectElement - The select element to populate.
+         * @param {boolean} [includeAll=true] - Whether to include an "All" option.
+         */
+        function populateYearSelect(selectElement, includeAll = true) {
+            if (!selectElement) {
+                console.error("populateYearSelect called with null selectElement");
+                return;
+            }
+            const currentYear = new Date().getFullYear();
+            selectElement.innerHTML = ''; // Clear existing options
+            if (includeAll) {
+                selectElement.add(new Option('全部', '全部'));
+            }
+            // Populate with recent years
+            for (let year = currentYear + 1; year >= currentYear - 10; year--) {
+                selectElement.add(new Option(year, year));
+            }
+            // Set default value to current year if possible
+            if (!includeAll || selectElement.options.length > 1) {
+                selectElement.value = currentYear;
+            }
+        }
+
+        /**
+         * Populates a select element with months (01-12).
+         * @param {HTMLSelectElement} selectElement - The select element to populate.
+         * @param {boolean} [includeAll=true] - Whether to include an "All" option.
+         */
+        function populateMonthSelect(selectElement, includeAll = true) {
+            if (!selectElement) {
+                console.error("populateMonthSelect called with null selectElement");
+                return;
+            }
+            selectElement.innerHTML = ''; // Clear existing options
+            if (includeAll) {
+                selectElement.add(new Option('全部', '全部'));
+            }
+            // Populate with months
+            for (let i = 1; i <= 12; i++) {
+                const monthStr = i.toString().padStart(2, '0');
+                selectElement.add(new Option(monthStr, monthStr));
+            }
+        }
+
+        // --- Data Persistence ---
+
+        /**
+         * Loads employee and attendance data from localStorage.
+         * Uses 'v2' keys for this version. Initializes 'is_resigned' if missing.
+         */
+        function loadData() {
+            const empData = localStorage.getItem('employees_v2');
+            const attData = localStorage.getItem('attendance_v2');
+            try {
+                employees = empData ? JSON.parse(empData) : {};
+            } catch (e) {
+                console.error("Error parsing employee data from localStorage:", e);
+                showAlert("加载员工数据时出错，可能数据已损坏。将使用空数据。", "error");
+                employees = {};
+            }
+            try {
+                attendance = attData ? JSON.parse(attData) : {};
+            } catch (e) {
+                console.error("Error parsing attendance data from localStorage:", e);
+                 showAlert("加载考勤数据时出错，可能数据已损坏。将使用空数据。", "error");
+                attendance = {};
+            }
+
+
+            // Ensure is_resigned property exists for backward compatibility
+            Object.values(employees).forEach(emp => {
+                if (emp.is_resigned === undefined) {
+                    emp.is_resigned = false;
+                }
+                // Ensure balance fields are numbers
+                emp.leave_balance = parseFloat(emp.leave_balance || 0);
+                emp.annual_leave_balance = parseFloat(emp.annual_leave_balance || 0);
+                emp.sick_leave_days = parseFloat(emp.sick_leave_days || 0);
+            });
+             // Ensure attendance hours are numbers
+            Object.values(attendance).forEach(records => {
+                records.forEach(rec => {
+                    rec.hours = parseFloat(rec.hours || 0);
                 });
             });
-        });
 
-        // 图片轮播效果已通过 CSS 动画实现
-        // 如需添加更多交互效果，可以在这里扩展 JavaScript 代码
-    </script>
+            console.log("Data loaded (v2):", { employees, attendance });
+        }
 
+        /**
+         * Saves the current employee and attendance data to localStorage.
+         */
+        function saveData() {
+            try {
+                localStorage.setItem('employees_v2', JSON.stringify(employees));
+                localStorage.setItem('attendance_v2', JSON.stringify(attendance));
+                console.log("Data saved (v2).");
+            } catch (e) {
+                console.error("Error saving data to localStorage:", e);
+                showAlert("保存数据失败！可能是本地存储已满或数据无法序列化。", "error");
+            }
+        }
 
-    <script>
-        function initializeImageSlider(sliderClass) {
-            const sliders = document.querySelectorAll(sliderClass);
-            
-            sliders.forEach(slider => {
-                const images = Array.from(slider.getElementsByTagName('img'));
-                const dots = Array.from(slider.querySelectorAll('.dot'));
-                let currentIndex = 0;
-                
-                function showImage(index) {
-                    images.forEach((img, i) => {
-                        img.style.opacity = i === index ? '1' : '0';
-                    });
-                    dots.forEach((dot, i) => {
-                        dot.classList.toggle('active', i === index);
-                    });
+        // --- Core Logic ---
+
+        /**
+         * Handles the login attempt.
+         */
+        function handleLogin() {
+            console.log("Login button clicked."); // Debug log
+            const username = usernameInput.value;
+            const password = passwordInput.value;
+
+            // Simple hardcoded login credentials
+            if (username === 'hongrx' && password === 'hrx1231') {
+                console.log("Login successful."); // Debug log
+                loginScreen.classList.add('hidden');
+                mainApp.classList.remove('hidden'); // Show main app container
+
+                // Initialize the main application UI AFTER showing the container
+                try {
+                    initializeAppUI(); // Initialize UI elements that need data
+                    console.log("initializeAppUI completed successfully."); // Debug log
+                } catch (error) {
+                    console.error("Error during initializeAppUI after login:", error); // Debug log
+                    showAlert("登录成功，但初始化界面时出错，请检查控制台获取详细信息。", "error");
+                    // Optionally hide main app again if init fails critically
+                    // mainApp.classList.add('hidden');
+                    // loginScreen.classList.remove('hidden');
                 }
-                
-                function nextImage() {
-                    currentIndex = (currentIndex + 1) % images.length;
-                    showImage(currentIndex);
+            } else {
+                console.log("Login failed."); // Debug log
+                showAlert('用户名或密码错误！', 'warning');
+            }
+        }
+
+        /**
+         * Initializes the main application UI elements after successful login.
+         * Populates dropdowns, sets default dates, and renders tables.
+         */
+        function initializeAppUI() {
+            console.log("Initializing App UI - Start"); // ADDED Debug log
+            // Wrap the entire initialization in a try-catch for safety
+            try {
+                console.log("Populating select elements..."); // ADDED Debug log
+                populateYearSelect(filterAttYearSelect);
+                populateMonthSelect(filterAttMonthSelect);
+                populateYearSelect(statsYearSelect);
+                populateMonthSelect(statsMonthSelect);
+                populateYearSelect(modalRecordYearSelect);
+                populateMonthSelect(modalRecordMonthSelect);
+                console.log("Populating select elements - Done"); // ADDED Debug log
+
+                console.log("Setting default date input values..."); // ADDED Debug log
+                const today = formatDate(new Date());
+                batchStartDateInput.value = today;
+                batchEndDateInput.value = today;
+                exportStartDateInput.value = today;
+                exportEndDateInput.value = today;
+                console.log("Setting default date input values - Done"); // ADDED Debug log
+
+                console.log("Updating employee table..."); // ADDED Debug log
+                updateEmployeeTable();
+                console.log("Updating employee table - Done"); // ADDED Debug log
+
+                console.log("Updating attendance table..."); // ADDED Debug log
+                updateAttendanceTable();
+                console.log("Updating attendance table - Done"); // ADDED Debug log
+
+                console.log("Initializing App UI - End Successfully"); // ADDED Debug log
+            } catch (error) {
+                 // Log the error and show an alert
+                 console.error("Error during initializeAppUI execution:", error);
+                 showAlert(`初始化界面时发生错误: ${error.message}. 请检查控制台。`, 'error');
+                 // Rethrow the error if you want handleLogin's catch block to also see it
+                 // throw error;
+            }
+        }
+
+
+        /**
+         * Handles switching between main tabs (Employee/Attendance).
+         * @param {Event} event - The click event from the tab button.
+         */
+        function switchTab(event) {
+            const targetTabId = event.target.dataset.tab;
+            // Ensure the clicked element is a tab button and not already active
+            if (!targetTabId || event.target.classList.contains('active')) return;
+
+            // Deactivate all tab buttons and hide all content panels
+            tabButtons.forEach(btn => btn.classList.remove('active'));
+            tabContents.forEach(content => content.classList.add('hidden'));
+
+            // Activate the clicked tab button and show the corresponding content panel
+            event.target.classList.add('active');
+            const targetContent = document.getElementById(targetTabId);
+            if (targetContent) {
+                targetContent.classList.remove('hidden');
+            } else {
+                 console.error(`Tab content with ID "${targetTabId}" not found.`);
+            }
+        }
+
+        /**
+         * Handles switching between attendance record tabs within the employee modal.
+         * @param {Event} event - The click event from the record tab button.
+         */
+        function switchRecordTab(event) {
+            const targetTabId = event.target.dataset.recordTab;
+             // Ensure the clicked element is a record tab button and not already active
+            if (!targetTabId || event.target.classList.contains('active')) return;
+
+            // Deactivate all record tab buttons and hide all record content panels
+            modalRecordTabButtons.forEach(btn => btn.classList.remove('active'));
+            modalRecordTabContents.forEach(content => content.classList.add('hidden'));
+
+            // Activate the clicked tab button and show the corresponding content panel
+            event.target.classList.add('active');
+            const targetContent = document.getElementById(targetTabId);
+             if (targetContent) {
+                targetContent.classList.remove('hidden');
+            } else {
+                 console.error(`Record tab content with ID "${targetTabId}" not found.`);
+            }
+        }
+
+        // --- Update Tables ---
+
+        /**
+         * Updates the main employee table based on current data and search filters.
+         */
+        function updateEmployeeTable() {
+            empTableBody.innerHTML = ''; // Clear existing rows
+            const searchId = searchEmpIdInput.value.toLowerCase();
+            const searchName = searchEmpNameInput.value.toLowerCase();
+            const searchPosition = searchEmpPositionSelect.value;
+
+            // Get employee IDs and sort them for consistent display order
+            const sortedEmpIds = Object.keys(employees).sort((a, b) => a.localeCompare(b));
+
+            sortedEmpIds.forEach(empId => {
+                const empData = employees[empId];
+                if (!empData) { // Safety check
+                    console.warn(`Employee data missing for ID: ${empId}`);
+                    return;
                 }
-                
-                // 点击切换图片
-                slider.addEventListener('click', nextImage);
-                
-                // 初始化显示
-                showImage(0);
-                
-                // 自动播放
-                setInterval(nextImage, 10000);
+
+                // Apply search filters
+                if (searchId && !empId.toLowerCase().includes(searchId)) return;
+                if (searchName && !empData.name.toLowerCase().includes(searchName)) return;
+                if (searchPosition !== '全部' && empData.position !== searchPosition) return;
+
+                // Create table row
+                const row = empTableBody.insertRow();
+                row.classList.add('clickable'); // Mark row as clickable for double-click action
+                if (empData.is_resigned) {
+                    row.classList.add('resigned-employee'); // Apply special styling for resigned employees
+                }
+
+                // Populate cells
+                row.insertCell().textContent = empId;
+                row.insertCell().textContent = empData.name;
+                row.insertCell().textContent = empData.position;
+                // Use toFixed(2) for consistent display of balances
+                row.insertCell().textContent = (empData.leave_balance || 0).toFixed(2);
+                row.insertCell().textContent = (empData.annual_leave_balance || 0).toFixed(2);
+                row.insertCell().textContent = (empData.sick_leave_days || 0).toFixed(2);
+                row.insertCell().textContent = empData.is_resigned ? '已离职' : '在职'; // Display status
+
+                // Store empId on the row for easy access in event listeners
+                row.dataset.empId = empId;
+                // Add double-click listener to open the details modal
+                row.addEventListener('dblclick', () => showEmployeeModal(empId));
             });
         }
 
-        // 页面加载完成后初始化所有图片轮播
-        document.addEventListener('DOMContentLoaded', function() {
-            initializeImageSlider('.about-image-slider');
-            initializeImageSlider('.service-images');
-        });
-    </script>
+        /**
+         * Updates the main attendance table based on current data and filters.
+         */
+        function updateAttendanceTable() {
+            attendanceTableBody.innerHTML = ''; // Clear existing rows
+            const filterYear = filterAttYearSelect.value;
+            const filterMonth = filterAttMonthSelect.value;
+            const filterType = filterAttTypeSelect.value;
 
+             // Collect all attendance records into a single array for easier sorting/filtering
+             const allRecords = [];
+             Object.entries(attendance).forEach(([empId, records]) => {
+                 // Include employee info for display, handle cases where employee might be missing
+                 const empData = employees[empId];
+                 const empName = empData?.name || '未知员工'; // Use optional chaining
+                 const empIsResigned = empData?.is_resigned || false; // Use optional chaining
+
+                 records.forEach(record => {
+                     // Add employee info to each record object
+                     allRecords.push({ empId, empName, empIsResigned, ...record });
+                 });
+             });
+
+             // Sort records: primarily by employee ID, secondarily by date
+             allRecords.sort((a, b) => {
+                 // Compare employee IDs first
+                 const idCompare = a.empId.localeCompare(b.empId);
+                 if (idCompare !== 0) return idCompare;
+
+                 // If IDs are the same, compare dates
+                 try {
+                     // Handle potential date ranges (use start date for sorting)
+                     const dateA = new Date(a.date.split(' ')[0]);
+                     const dateB = new Date(b.date.split(' ')[0]);
+                     // Check for invalid dates after parsing
+                     if (!isNaN(dateA) && !isNaN(dateB)) return dateA - dateB;
+                 } catch (e) {
+                     // Fallback for parsing errors
+                     console.warn("Error parsing dates for sorting:", a.date, b.date);
+                 }
+                 // Fallback to string comparison if dates are invalid or parsing fails
+                 return a.date.localeCompare(b.date);
+             });
+
+
+            allRecords.forEach(record => {
+                 // Attempt to parse the record's date (handle single dates and ranges)
+                 let recordDate;
+                 try {
+                     const datePart = record.date.split(' ')[0]; // Get the first date part (start date)
+                     recordDate = new Date(datePart);
+                     if (isNaN(recordDate.getTime())) throw new Error("Invalid Date"); // Validate parsed date
+                 } catch (e) {
+                     console.warn(`Skipping attendance record with invalid date format: EmpID=${record.empId}, Date='${record.date}'`);
+                     return; // Skip this record if the date is invalid
+                 }
+
+                // Apply filters based on year, month, and type
+                if (filterYear !== '全部' && recordDate.getFullYear().toString() !== filterYear) return;
+                if (filterMonth !== '全部' && (recordDate.getMonth() + 1).toString().padStart(2, '0') !== filterMonth) return;
+                if (filterType !== '全部' && record.type !== filterType) return;
+
+                // Create table row
+                const row = attendanceTableBody.insertRow();
+                row.classList.add('clickable'); // Mark row as clickable for double-click action
+                if (record.empIsResigned) { // Apply resigned styling if the employee is resigned
+                    row.classList.add('resigned-employee');
+                }
+
+                // Populate cells
+                row.insertCell().textContent = record.empId;
+                row.insertCell().textContent = record.empName;
+                row.insertCell().textContent = record.date; // Display original date string (could be range)
+                row.insertCell().textContent = record.type;
+                row.insertCell().textContent = hoursToDays(record.hours).toFixed(2); // Convert hours to days for display
+                row.insertCell().textContent = record.reason || ''; // Display reason or empty string
+
+                // Store identifiers on the row for the edit modal
+                row.dataset.empId = record.empId;
+                row.dataset.recordDate = record.date; // Use the original date string as the identifier
+
+                // Add double-click listener to open the edit modal ONLY if the employee is NOT resigned
+                if (!record.empIsResigned) {
+                    row.addEventListener('dblclick', () => showAttendanceEditModal(record.empId, record.date));
+                } else {
+                    // Optionally change cursor for resigned rows to indicate non-interactivity
+                    row.style.cursor = 'default';
+                }
+            });
+        }
+
+        // --- Employee Modal Logic ---
+
+        /**
+         * Shows the employee details modal for adding or editing an employee.
+         * @param {string|null} [empId=null] - The ID of the employee to edit, or null to add a new one.
+         */
+        function showEmployeeModal(empId = null) {
+            currentEditEmpId = empId; // Store the ID of the employee being edited (or null for add)
+            const isEditMode = !!(empId && employees[empId]); // True if editing an existing employee
+            const empData = isEditMode ? employees[empId] : {}; // Get data if editing, else empty object
+            const isResigned = isEditMode ? empData.is_resigned : false; // Check resigned status if editing
+
+            employeeModalTitle.textContent = isEditMode ? `员工详情 - ${empData.name}` : '添加新员工';
+
+            // Configure Employee ID field: display as text in edit mode, show input in add mode
+            modalEmpIdDisplay.textContent = isEditMode ? empId : '';
+            modalEmpIdInput.value = isEditMode ? empId : ''; // Set value for potential form submission (though not used directly)
+            modalEmpIdInput.classList.toggle('hidden', isEditMode); // Hide input field in edit mode
+            modalEmpIdDisplay.classList.toggle('hidden', !isEditMode); // Hide display span in add mode
+            modalEmpIdInput.readOnly = isEditMode; // Make ID readonly when editing
+
+            // Populate basic info fields
+            modalEmpNameInput.value = empData.name || '';
+            modalEmpPositionSelect.value = empData.position || '医师'; // Default to '医师' if new
+            modalEmpLeaveInput.value = (empData.leave_balance || 0).toFixed(2);
+            modalEmpAnnualInput.value = (empData.annual_leave_balance || 0).toFixed(2);
+            modalEmpSickInput.value = (empData.sick_leave_days || 0).toFixed(2); // Sick leave is read-only
+
+             // --- UI adjustments based on resigned status ---
+            employeeResignedIndicator.classList.toggle('hidden', !isResigned); // Show/hide the "Resigned" label
+
+            // Disable form fields and action buttons if the employee is resigned
+            const disableIfResigned = isResigned;
+            modalEmpNameInput.disabled = disableIfResigned;
+            modalEmpPositionSelect.disabled = disableIfResigned;
+            modalEmpLeaveInput.disabled = disableIfResigned; // Allow editing balance even if resigned? No, keep disabled.
+            modalEmpAnnualInput.disabled = disableIfResigned; // Allow editing balance even if resigned? No, keep disabled.
+            // modalEmpSickInput is always readonly
+
+            saveEmpBtn.disabled = disableIfResigned;
+            deleteEmpBtn.disabled = disableIfResigned; // Cannot delete resigned employees via UI
+            resignEmpBtn.disabled = disableIfResigned; // Cannot resign again
+
+            // Show/hide action buttons based on mode (add/edit)
+            resignEmpBtn.classList.toggle('hidden', !isEditMode); // Only show "Resign" button in edit mode
+            deleteEmpBtn.classList.toggle('hidden', !isEditMode); // Only show "Delete" button in edit mode
+
+            // --- Attendance Records Section ---
+            if (isEditMode) {
+                // Populate attendance records for the current employee
+                updateModalAttendanceTables(empId);
+            } else {
+                // Clear attendance tables and stats label for a new employee
+                modalCompTableBody.innerHTML = '';
+                modalAnnualTableBody.innerHTML = '';
+                modalLeaveTableBody.innerHTML = '';
+                modalStatsLabel.textContent = '统计: 无记录';
+            }
+
+            // Reset attendance record filters and tabs to default state
+            modalRecordYearSelect.value = new Date().getFullYear();
+            modalRecordMonthSelect.value = '全部';
+            // Set the first tab ('comp-records') as active
+            modalRecordTabButtons.forEach((btn, index) => btn.classList.toggle('active', index === 0));
+            modalRecordTabContents.forEach((content, index) => content.classList.toggle('hidden', index !== 0));
+
+            // Finally, show the modal
+            showModal('employee-modal');
+        }
+
+        /**
+         * Saves employee details (either adds a new employee or updates an existing one).
+         */
+        function saveEmployee() {
+            // Determine the employee ID: use currentEditEmpId if editing, or the input field if adding
+            const empId = currentEditEmpId || modalEmpIdInput.value.trim();
+            const name = modalEmpNameInput.value.trim();
+            const position = modalEmpPositionSelect.value;
+            // Parse balances, defaulting to 0 if input is invalid or empty
+            const leaveBalance = parseFloat(modalEmpLeaveInput.value) || 0;
+            const annualLeaveBalance = parseFloat(modalEmpAnnualInput.value) || 0;
+
+            // --- Input Validation ---
+            if (!empId || !name) {
+                showAlert('工号和姓名不能为空！', 'warning');
+                return;
+            }
+            // Check if balances are valid numbers (though parseFloat handles many cases)
+            if (isNaN(leaveBalance) || isNaN(annualLeaveBalance)) {
+                showAlert('补休和公休天数必须是有效的数字！', 'warning');
+                return;
+            }
+
+            // --- Logic for Edit vs. Add ---
+            if (currentEditEmpId) {
+                // --- EDIT MODE ---
+                // Double-check: Should not be able to save if resigned (UI should prevent this)
+                 if (employees[currentEditEmpId]?.is_resigned) {
+                    showAlert('无法编辑已离职员工的信息。', 'warning');
+                    return;
+                }
+                // Update existing employee data, preserving sick leave days and resigned status
+                employees[currentEditEmpId] = {
+                    ...employees[currentEditEmpId], // Keep existing properties like sick_leave_days, is_resigned
+                    name: name,
+                    position: position,
+                    leave_balance: leaveBalance,
+                    annual_leave_balance: annualLeaveBalance,
+                };
+                showAlert('员工信息更新成功！', 'success');
+            } else {
+                // --- ADD MODE ---
+                // Check if the entered employee ID already exists
+                if (employees[empId]) {
+                    showAlert('该工号已存在！请使用不同的工号。', 'error');
+                    return;
+                }
+                // Create new employee object
+                employees[empId] = {
+                    name: name,
+                    position: position,
+                    leave_balance: leaveBalance,
+                    annual_leave_balance: annualLeaveBalance,
+                    sick_leave_days: 0.0, // Initialize sick leave to 0
+                    is_resigned: false // New employees are not resigned by default
+                };
+                // Ensure an attendance array exists for the new employee
+                if (!attendance[empId]) {
+                    attendance[empId] = [];
+                }
+                 showAlert('新员工添加成功！', 'success');
+            }
+
+            // --- Post-Save Actions ---
+            saveData(); // Persist changes to localStorage
+            updateEmployeeTable(); // Refresh the main employee table
+            updateAttendanceTable(); // Refresh the main attendance table (in case name changed)
+            closeModal('employee-modal'); // Close the modal
+        }
+
+        /**
+         * Marks the currently edited employee as resigned.
+         */
+         function markEmployeeResigned() {
+            if (!currentEditEmpId || !employees[currentEditEmpId]) return; // Ensure we are editing a valid employee
+
+             // Check if already resigned (should be prevented by button disable, but double-check)
+             if (employees[currentEditEmpId].is_resigned) {
+                 showAlert('该员工已被标记为离职。', 'info');
+                 return;
+             }
+
+             // Confirmation dialog
+             if (confirm(`确定要将员工 ${employees[currentEditEmpId].name} (${currentEditEmpId}) 标记为已离职吗？\n\n离职后将无法再为其添加或编辑考勤记录，且员工信息将变为只读。`)) {
+                 // Set the flag
+                 employees[currentEditEmpId].is_resigned = true;
+
+                 // Persist, update UI, and close
+                 saveData();
+                 updateEmployeeTable(); // Refresh main table to show status change and styling
+                 updateAttendanceTable(); // Refresh attendance table to apply resigned styling/disable editing
+                 closeModal('employee-modal');
+                 showAlert('员工已成功标记为离职！', 'success');
+             }
+         }
+
+        /**
+         * Deletes the currently edited employee and their attendance records.
+         * Note: Deletion of resigned employees is prevented by the UI.
+         */
+        function deleteEmployee() {
+            if (!currentEditEmpId || !employees[currentEditEmpId]) return; // Ensure valid employee
+
+            // Prevent deletion of resigned employees via the UI
+            if (employees[currentEditEmpId].is_resigned) {
+                 showAlert('无法删除已离职员工。如需移除历史数据，请考虑备份后手动处理。', 'warning');
+                 return;
+             }
+
+            // Confirmation dialog
+            if (confirm(`确定要永久删除员工 ${employees[currentEditEmpId].name} (${currentEditEmpId}) 吗？\n\n警告：此操作将同时删除该员工的所有考勤记录，且无法恢复！`)) {
+                // Delete employee data
+                delete employees[currentEditEmpId];
+                // Delete corresponding attendance records
+                delete attendance[currentEditEmpId];
+
+                // Persist, update UI, and close
+                saveData();
+                updateEmployeeTable();
+                updateAttendanceTable();
+                closeModal('employee-modal');
+                showAlert('员工及相关考勤记录已删除！', 'success');
+            }
+        }
+
+        /**
+         * Updates the attendance record tables within the Employee Detail Modal based on filters.
+         * @param {string} empId - The ID of the employee whose records are being displayed.
+         */
+        function updateModalAttendanceTables(empId) {
+            // Ensure employee ID and attendance data exist
+            if (!empId || !attendance[empId]) {
+                modalCompTableBody.innerHTML = '';
+                modalAnnualTableBody.innerHTML = '';
+                modalLeaveTableBody.innerHTML = '';
+                modalStatsLabel.textContent = '统计: 无记录';
+                return;
+            }
+
+            // Get filter values from the modal's dropdowns
+            const filterYear = modalRecordYearSelect.value;
+            const filterMonth = modalRecordMonthSelect.value;
+
+            // Clear existing table rows
+            modalCompTableBody.innerHTML = '';
+            modalAnnualTableBody.innerHTML = '';
+            modalLeaveTableBody.innerHTML = '';
+
+            // Variables to calculate statistics for the filtered period
+            let periodCompHoursNet = 0; // Net effect of 加班 (+) and 调休 (-)
+            let periodAnnualHoursUsed = 0; // Total 公休 hours used
+            let periodSickHoursTotal = 0; // Total 病事假 hours
+
+             // Sort records by date for chronological display within the modal
+             const sortedRecords = [...attendance[empId]].sort((a, b) => {
+                 try {
+                     const dateA = new Date(a.date.split(' ')[0]); // Use start date for sorting
+                     const dateB = new Date(b.date.split(' ')[0]);
+                     if (!isNaN(dateA) && !isNaN(dateB)) return dateA - dateB;
+                 } catch (e) { /* ignore parsing errors for sorting */ }
+                 return a.date.localeCompare(b.date); // Fallback string compare
+             });
+
+
+            sortedRecords.forEach(record => {
+                let recordDate;
+                try {
+                    // Use start date for filtering
+                    const datePart = record.date.split(' ')[0];
+                    recordDate = new Date(datePart);
+                    if (isNaN(recordDate.getTime())) throw new Error("Invalid Date");
+                } catch (e) {
+                    console.warn(`Skipping modal record due to invalid date: ${record.date}`);
+                    return; // Skip records with invalid dates
+                }
+
+                // Apply year and month filters
+                if (filterYear !== '全部' && recordDate.getFullYear().toString() !== filterYear) return;
+                if (filterMonth !== '全部' && (recordDate.getMonth() + 1).toString().padStart(2, '0') !== filterMonth) return;
+
+                // Determine which table the record belongs to and update period stats
+                let targetTableBody;
+                const recordHours = record.hours; // Hours for this specific record
+
+                switch (record.type) {
+                    case '加班':
+                        targetTableBody = modalCompTableBody;
+                        periodCompHoursNet += recordHours; // Increases net compensatory time
+                        break;
+                    case '调休':
+                        targetTableBody = modalCompTableBody;
+                        periodCompHoursNet -= recordHours; // Decreases net compensatory time
+                        break;
+                    case '公休':
+                        targetTableBody = modalAnnualTableBody;
+                        periodAnnualHoursUsed += recordHours;
+                        break;
+                    case '病事假': // Assuming any other type is sick/personal leave
+                    default:
+                        targetTableBody = modalLeaveTableBody;
+                        periodSickHoursTotal += recordHours;
+                        break;
+                }
+
+                // Add the row to the appropriate table
+                const row = targetTableBody.insertRow();
+                row.insertCell().textContent = record.date; // Show original date string
+                row.insertCell().textContent = record.type;
+                row.insertCell().textContent = hoursToDays(recordHours).toFixed(2); // Display as days
+                row.insertCell().textContent = record.reason || '';
+            });
+
+            // Update the statistics label based on the calculated period totals
+            const periodDesc = `${filterYear === '全部' ? '所有时间' : filterYear + '年'}${filterMonth === '全部' ? '' : filterMonth + '月'}`;
+            modalStatsLabel.textContent = `${periodDesc} 统计: 净补休=${hoursToDays(periodCompHoursNet).toFixed(2)}天 | 公休使用=${hoursToDays(periodAnnualHoursUsed).toFixed(2)}天 | 请假=${hoursToDays(periodSickHoursTotal).toFixed(2)}天`;
+        }
+
+
+        // --- Batch Attendance Modal Logic ---
+
+        /**
+         * Shows the modal for adding attendance records to multiple employees at once.
+         */
+        function showBatchAttendanceModal() {
+            batchEmpListBody.innerHTML = ''; // Clear previous list
+            batchSearchEmpInput.value = ''; // Clear search field
+            batchSelectAllHeaderCheckbox.checked = false; // Uncheck header checkbox
+
+            // Sort active employee IDs for consistent display
+            const sortedActiveEmpIds = Object.keys(employees)
+                                          .filter(empId => !employees[empId].is_resigned) // Only include non-resigned
+                                          .sort((a, b) => a.localeCompare(b));
+
+            let hasActiveEmployees = false; // Flag to track if any employees are available
+
+            // Populate the employee list in the modal
+            sortedActiveEmpIds.forEach(empId => {
+                hasActiveEmployees = true;
+                const empData = employees[empId];
+                const row = batchEmpListBody.insertRow();
+
+                // Checkbox cell
+                const cellCheck = row.insertCell();
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.value = empId; // Store empId in value
+                checkbox.dataset.empId = empId; // Also in dataset if needed elsewhere
+                checkbox.addEventListener('change', updateTotalSelectionCheckbox); // Update header checkbox on change
+                cellCheck.appendChild(checkbox);
+
+                // Info cells
+                row.insertCell().textContent = empId;
+                row.insertCell().textContent = empData.name;
+                row.insertCell().textContent = empData.position;
+            });
+
+            // Display a message if no active employees are found
+            if (!hasActiveEmployees) {
+                 batchEmpListBody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 20px; color: var(--text-gray);">没有在职员工可供选择。</td></tr>';
+                 batchSelectAllHeaderCheckbox.disabled = true; // Disable header checkbox
+                 batchSelectAllBtn.disabled = true;
+                 batchSelectNoneBtn.disabled = true;
+            } else {
+                 batchSelectAllHeaderCheckbox.disabled = false;
+                 batchSelectAllBtn.disabled = false;
+                 batchSelectNoneBtn.disabled = false;
+            }
+
+            // Reset attendance form fields and preview
+            // batchStartDateInput.value = formatDate(new Date()); // Keep existing dates? Or reset? Resetting seems safer.
+            // batchEndDateInput.value = formatDate(new Date());
+            batchAttDaysInput.value = '';
+            batchAttReasonInput.value = '';
+            batchAttTypeSelect.selectedIndex = 0; // Reset type to first option
+            updateBatchPreview(); // Update preview label
+            updateTotalSelectionCheckbox(); // Ensure header checkbox state is correct initially
+
+            showModal('batch-attendance-modal');
+        }
+
+        /**
+         * Filters the employee list in the batch modal based on search input.
+         */
+        function filterBatchEmployees() {
+            const searchText = batchSearchEmpInput.value.toLowerCase();
+            const rows = batchEmpListBody.querySelectorAll('tr');
+            let visibleCount = 0;
+
+            rows.forEach(row => {
+                // Check if it's an employee row (has more than 1 cell)
+                if (row.cells.length > 1) {
+                    const empId = row.cells[1].textContent.toLowerCase();
+                    const name = row.cells[2].textContent.toLowerCase();
+                    const position = row.cells[3].textContent.toLowerCase();
+                    // Check if any field contains the search text
+                    const isVisible = empId.includes(searchText) || name.includes(searchText) || position.includes(searchText);
+                    row.style.display = isVisible ? '' : 'none'; // Show/hide row
+                    if (isVisible) visibleCount++;
+                } else {
+                    // Hide the 'no employees' message row if searching
+                    row.style.display = searchText ? 'none' : '';
+                }
+            });
+            updateTotalSelectionCheckbox(); // Update header checkbox based on filtered visibility
+        }
+
+        /**
+         * Toggles the checked state of all *visible* employee checkboxes based on the header checkbox.
+         * @param {Event} event - The change event from the header checkbox.
+         */
+        function toggleSelectAllBatch(event) {
+            const isChecked = event.target.checked;
+            const checkboxes = batchEmpListBody.querySelectorAll('input[type="checkbox"]');
+            checkboxes.forEach(cb => {
+                // Only affect checkboxes in visible rows
+                if (cb.closest('tr').style.display !== 'none' && !cb.disabled) {
+                    cb.checked = isChecked;
+                }
+            });
+        }
+
+        /**
+         * Checks all *visible* employee checkboxes in the batch modal.
+         */
+        function batchSelectAllVisible() {
+            const checkboxes = batchEmpListBody.querySelectorAll('input[type="checkbox"]');
+            checkboxes.forEach(cb => {
+                // Only check visible and enabled checkboxes
+                if (cb.closest('tr').style.display !== 'none' && !cb.disabled) {
+                    cb.checked = true;
+                }
+            });
+            updateTotalSelectionCheckbox(); // Update header checkbox state
+        }
+
+        /**
+         * Unchecks all *visible* employee checkboxes in the batch modal.
+         */
+        function batchSelectNoneVisible() {
+            const checkboxes = batchEmpListBody.querySelectorAll('input[type="checkbox"]');
+            checkboxes.forEach(cb => {
+                 // Only uncheck visible and enabled checkboxes
+                if (cb.closest('tr').style.display !== 'none' && !cb.disabled) {
+                    cb.checked = false;
+                }
+            });
+            updateTotalSelectionCheckbox(); // Update header checkbox state
+        }
+
+        /**
+         * Updates the state (checked/unchecked, enabled/disabled) of the header checkbox
+         * based on the state of individual visible employee checkboxes.
+         */
+        function updateTotalSelectionCheckbox() {
+            const checkboxes = batchEmpListBody.querySelectorAll('input[type="checkbox"]');
+            let allVisibleChecked = true;
+            let anyVisibleEnabled = false; // Track if there are any checkboxes to select
+
+            checkboxes.forEach(cb => {
+                // Consider only visible and enabled checkboxes
+                if (cb.closest('tr').style.display !== 'none' && !cb.disabled) {
+                    anyVisibleEnabled = true;
+                    if (!cb.checked) {
+                        allVisibleChecked = false; // If any visible one is unchecked, header shouldn't be checked
+                    }
+                }
+            });
+
+            // Check header only if there are visible checkboxes and all of them are checked
+            batchSelectAllHeaderCheckbox.checked = anyVisibleEnabled && allVisibleChecked;
+            // Disable header checkbox if there are no visible/enabled checkboxes to select
+            batchSelectAllHeaderCheckbox.disabled = !anyVisibleEnabled;
+        }
+
+        /**
+         * Updates the preview label in the batch modal to show the effect of the action.
+         */
+        function updateBatchPreview() {
+            const days = parseFloat(batchAttDaysInput.value || '0');
+            const type = batchAttTypeSelect.value;
+            let text = '效果预览: '; // Preview prefix
+
+            if (days > 0) {
+                const daysFixed = days.toFixed(2); // Use fixed precision for display
+                switch (type) {
+                    case '加班': text += `将为选中员工增加 ${daysFixed} 天补休`; break;
+                    case '调休': text += `将从选中员工扣除 ${daysFixed} 天补休`; break;
+                    case '公休': text += `将从选中员工扣除 ${daysFixed} 天公休`; break;
+                    case '病事假': text += `将为选中员工增加 ${daysFixed} 天请假记录`; break;
+                    default: text += '无效类型'; break;
+                }
+            } else {
+                text += '(请输入有效天数)';
+            }
+            batchPreviewLabel.textContent = text;
+        }
+
+        /**
+         * Saves the batch attendance records for all selected employees.
+         */
+        function saveBatchAttendance() {
+            const selectedEmpIds = [];
+            // Get all checked checkboxes that are currently visible and enabled
+            const checkboxes = batchEmpListBody.querySelectorAll('input[type="checkbox"]:checked');
+            checkboxes.forEach(cb => {
+                if (cb.closest('tr').style.display !== 'none' && !cb.disabled) {
+                    selectedEmpIds.push(cb.value);
+                }
+            });
+
+            // Get attendance details from the form
+            const type = batchAttTypeSelect.value;
+            const days = parseFloat(batchAttDaysInput.value || '0');
+            const reason = batchAttReasonInput.value.trim();
+            const startDateStr = batchStartDateInput.value;
+            const endDateStr = batchEndDateInput.value;
+
+            // --- Input Validation ---
+            if (selectedEmpIds.length === 0) {
+                showAlert('请至少选择一名在职员工！', 'warning');
+                return;
+            }
+            if (days <= 0 || isNaN(days)) {
+                showAlert('请输入有效的、大于0的天数！', 'warning');
+                return;
+            }
+            if (!startDateStr || !endDateStr) {
+                showAlert('请选择开始和结束日期！', 'warning');
+                return;
+            }
+
+            // Validate date range
+            const startDate = new Date(startDateStr);
+            const endDate = new Date(endDateStr);
+            if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+                 showAlert('输入的日期无效！', 'warning');
+                 return;
+            }
+             // Ensure end date is not before start date
+            if (startDate > endDate) {
+                showAlert('开始日期不能晚于结束日期！', 'warning');
+                return;
+            }
+
+            // --- Process Records ---
+            const hours = daysToHours(days); // Convert days to hours for storage
+            // Create the date string (single date or range)
+            let dateString = formatDate(startDate);
+            if (startDateStr !== endDateStr) {
+                dateString += ` 至 ${formatDate(endDate)}`;
+            }
+
+            let skippedCount = 0;
+            // Add the record to each selected employee's attendance
+            selectedEmpIds.forEach(empId => {
+                // Final check: ensure employee exists and is not resigned before adding
+                if (employees[empId] && !employees[empId].is_resigned) {
+                    // Ensure the attendance array exists
+                    if (!attendance[empId]) {
+                        attendance[empId] = [];
+                    }
+                    // Create the new attendance record
+                    const newRecord = { date: dateString, type: type, hours: hours, reason: reason };
+                    attendance[empId].push(newRecord);
+                    // IMPORTANT: Update the employee's balance based on the new record
+                    updateEmployeeBalance(empId, type, hours);
+                } else {
+                     console.warn(`Skipping batch attendance for resigned or non-existent employee: ${empId}`);
+                     skippedCount++;
+                }
+            });
+
+            // --- Post-Save Actions ---
+            saveData(); // Persist changes
+            updateEmployeeTable(); // Refresh main employee table (balances changed)
+            updateAttendanceTable(); // Refresh main attendance table
+            closeModal('batch-attendance-modal'); // Close the modal
+
+            let successMessage = `批量考勤记录添加成功 (${selectedEmpIds.length - skippedCount} 人)！`;
+            if (skippedCount > 0) {
+                successMessage += ` (${skippedCount} 人被跳过，可能已离职)。`;
+            }
+            showAlert(successMessage, 'success');
+        }
+
+
+        // --- Attendance Edit Modal Logic ---
+
+        /**
+         * Shows the modal for editing an existing attendance record.
+         * @param {string} empId - The ID of the employee.
+         * @param {string} recordDate - The date string identifier of the record.
+         */
+        function showAttendanceEditModal(empId, recordDate) {
+            currentEditAttEmpId = empId; // Store employee ID being edited
+            currentEditAttDate = recordDate; // Store date string of the record being edited
+
+            const empData = employees[empId];
+             // Safety check: If employee data is missing, show error and exit
+             if (!empData) {
+                 showAlert(`错误：找不到员工 ${empId} 的信息。`, 'error');
+                 closeModal('edit-attendance-modal'); // Close modal if opened somehow
+                 return;
+             }
+
+            // Find the specific attendance record
+            const records = attendance[empId] || [];
+            const record = records.find(r => r.date === recordDate);
+
+            // Safety check: If the record is not found, show error and exit
+            if (!record) {
+                showAlert(`错误：找不到日期为 ${recordDate} 的考勤记录！`, 'error');
+                closeModal('edit-attendance-modal');
+                return;
+            }
+
+            // Check if the employee is resigned
+            const isResigned = empData.is_resigned || false;
+
+            // Populate modal fields
+            editAttEmpInfoSpan.textContent = `${empData.name} (${empId})${isResigned ? ' - 已离职' : ''}`;
+            editAttDateSpan.textContent = record.date; // Display the date identifier
+            editAttTypeSelect.value = record.type;
+            editAttDaysInput.value = hoursToDays(record.hours).toFixed(2); // Convert hours back to days for editing
+            editAttReasonInput.value = record.reason || '';
+
+            // Disable editing fields and buttons if the employee is resigned
+            editAttTypeSelect.disabled = isResigned;
+            editAttDaysInput.disabled = isResigned;
+            editAttReasonInput.disabled = isResigned;
+            saveEditAttBtn.disabled = isResigned;
+            deleteAttBtn.disabled = isResigned;
+
+            // Show the modal
+            showModal('edit-attendance-modal');
+        }
+
+        /**
+         * Saves the changes made to an attendance record.
+         */
+        function saveAttendanceEdit() {
+            // Ensure we have the context of which record is being edited
+            if (!currentEditAttEmpId || !currentEditAttDate) return;
+
+            // Re-check resigned status before saving (belt and suspenders)
+            if (employees[currentEditAttEmpId]?.is_resigned) {
+                 showAlert('无法编辑已离职员工的考勤记录。', 'warning');
+                 return;
+            }
+
+            // Find the record again
+            const records = attendance[currentEditAttEmpId];
+            if (!records) { // Should not happen if modal opened correctly
+                 showAlert('错误：找不到该员工的考勤数据。', 'error'); return;
+            }
+            const recordIndex = records.findIndex(r => r.date === currentEditAttDate);
+
+            if (recordIndex === -1) {
+                showAlert('错误：找不到要编辑的原始记录！', 'error');
+                return;
+            }
+
+            // Get original record details *before* modification
+            const oldRecord = { ...records[recordIndex] };
+
+            // Get new values from the modal form
+            const newType = editAttTypeSelect.value;
+            const newDays = parseFloat(editAttDaysInput.value || '0');
+            const newReason = editAttReasonInput.value.trim();
+
+            // --- Input Validation ---
+            if (newDays <= 0 || isNaN(newDays)) {
+                showAlert('请输入有效的、大于0的天数！', 'warning');
+                return;
+            }
+            const newHours = daysToHours(newDays); // Convert days back to hours for storage
+
+            // --- Update Logic ---
+            // 1. Reverse the effect of the *old* record on employee balance
+            updateEmployeeBalance(currentEditAttEmpId, oldRecord.type, -oldRecord.hours);
+
+            // 2. Update the record in the attendance array
+            records[recordIndex] = {
+                date: oldRecord.date, // Keep the original date identifier
+                type: newType,
+                hours: newHours,
+                reason: newReason
+            };
+
+            // 3. Apply the effect of the *new* record on employee balance
+            updateEmployeeBalance(currentEditAttEmpId, newType, newHours);
+
+            // --- Post-Save Actions ---
+            saveData(); // Persist changes
+            updateEmployeeTable(); // Refresh employee table (balances may have changed)
+            updateAttendanceTable(); // Refresh attendance table (record details changed)
+            // Refresh modal tables if the employee detail modal happens to be open for the same user
+            if (!employeeModal.classList.contains('hidden') && currentEditEmpId === currentEditAttEmpId) {
+                 updateModalAttendanceTables(currentEditEmpId);
+            }
+            closeModal('edit-attendance-modal'); // Close the edit modal
+            showAlert('考勤记录更新成功！', 'success');
+        }
+
+        /**
+         * Deletes the currently selected attendance record.
+         */
+        function deleteAttendanceRecord() {
+            // Ensure we have the context
+            if (!currentEditAttEmpId || !currentEditAttDate) return;
+
+             // Re-check resigned status before deleting
+            if (employees[currentEditAttEmpId]?.is_resigned) {
+                 showAlert('无法删除已离职员工的考勤记录。', 'warning');
+                 return;
+            }
+
+            // Confirmation dialog
+            if (confirm(`确定要永久删除这条考勤记录吗？\n\n员工: ${currentEditAttEmpId}\n日期: ${currentEditAttDate}\n\n此操作无法恢复！`)) {
+                const records = attendance[currentEditAttEmpId];
+                 if (!records) { // Should not happen
+                    showAlert('错误：找不到该员工的考勤数据。', 'error'); return;
+                 }
+                const recordIndex = records.findIndex(r => r.date === currentEditAttDate);
+
+                if (recordIndex !== -1) {
+                    // Get the record *before* deleting it to reverse its effect
+                    const deletedRecord = records[recordIndex];
+
+                    // 1. Reverse the effect of the deleted record on balance
+                    updateEmployeeBalance(currentEditAttEmpId, deletedRecord.type, -deletedRecord.hours);
+
+                    // 2. Remove the record from the array
+                    records.splice(recordIndex, 1);
+
+                    // --- Post-Delete Actions ---
+                    saveData(); // Persist changes
+                    updateEmployeeTable(); // Refresh employee table (balances changed)
+                    updateAttendanceTable(); // Refresh attendance table (record removed)
+                     // Refresh modal tables if the employee detail modal happens to be open
+                    if (!employeeModal.classList.contains('hidden') && currentEditEmpId === currentEditAttEmpId) {
+                         updateModalAttendanceTables(currentEditEmpId);
+                    }
+                    closeModal('edit-attendance-modal'); // Close the edit modal
+                    showAlert('考勤记录已删除！', 'success');
+                } else {
+                    // This shouldn't happen if the modal opened correctly
+                    showAlert('错误：找不到要删除的记录！', 'error');
+                }
+            }
+        }
+
+        /**
+         * Helper function to update an employee's leave balances based on a single attendance record change.
+         * Handles additions, edits (by reversing old and applying new), and deletions (by reversing).
+         * @param {string} empId - The ID of the employee.
+         * @param {'加班'|'调休'|'公休'|'病事假'} recordType - The type of the attendance record.
+         * @param {number} hoursDelta - The change in hours (+ for additions, - for reversals/deductions).
+         */
+        function updateEmployeeBalance(empId, recordType, hoursDelta) {
+            // Ensure employee exists
+            if (!employees[empId]) {
+                console.warn(`Attempted to update balance for non-existent employee: ${empId}`);
+                return;
+            }
+
+            // Ensure hoursDelta is a number
+            if (isNaN(hoursDelta)) {
+                console.warn(`Invalid hoursDelta (${hoursDelta}) passed to updateEmployeeBalance for empId: ${empId}`);
+                return;
+            }
+
+            const daysDelta = hoursToDays(hoursDelta); // Convert hour change to day change
+
+            // Update the appropriate balance based on record type
+            switch (recordType) {
+                case '加班':
+                    employees[empId].leave_balance = (employees[empId].leave_balance || 0) + daysDelta;
+                    break;
+                case '调休':
+                    employees[empId].leave_balance = (employees[empId].leave_balance || 0) - daysDelta;
+                    break;
+                case '公休':
+                    employees[empId].annual_leave_balance = (employees[empId].annual_leave_balance || 0) - daysDelta;
+                    break;
+                case '病事假': // Treat any other type as sick/personal leave
+                default:
+                    employees[empId].sick_leave_days = (employees[empId].sick_leave_days || 0) + daysDelta;
+                    break;
+            }
+
+            // Ensure balances remain valid numbers and round to avoid floating point issues (e.g., 2 decimal places)
+            employees[empId].leave_balance = parseFloat((employees[empId].leave_balance || 0).toFixed(2));
+            employees[empId].annual_leave_balance = parseFloat((employees[empId].annual_leave_balance || 0).toFixed(2));
+            employees[empId].sick_leave_days = parseFloat((employees[empId].sick_leave_days || 0).toFixed(2));
+
+            // Optional: Add checks to prevent negative balances if required by business logic
+            // if (employees[empId].leave_balance < 0) employees[empId].leave_balance = 0;
+            // if (employees[empId].annual_leave_balance < 0) employees[empId].annual_leave_balance = 0;
+        }
+
+
+        // --- Sidebar Actions ---
+
+        /**
+         * Applies the default annual leave days (from input) to all *active* employees.
+         */
+        function applyAnnualLeave() {
+            const defaultLeave = parseFloat(defaultAnnualLeaveInput.value);
+
+            // Validate input
+            if (isNaN(defaultLeave) || defaultLeave < 0) {
+                showAlert('请输入有效的非负公休天数！', 'warning');
+                return;
+            }
+
+            // Confirmation dialog
+            if (confirm(`确定要将所有 *在职* 员工的【剩余公休】设置为 ${defaultLeave.toFixed(2)} 天吗？\n\n此操作将覆盖他们当前的剩余公休天数。`)) {
+                let updatedCount = 0;
+                Object.keys(employees).forEach(empId => {
+                    // Only apply to non-resigned employees
+                    if (!employees[empId].is_resigned) {
+                        employees[empId].annual_leave_balance = defaultLeave;
+                        updatedCount++;
+                    }
+                });
+
+                // Persist and update UI
+                saveData();
+                updateEmployeeTable(); // Refresh table to show new balances
+                showAlert(`已成功更新 ${updatedCount} 名在职员工的公休天数！`, 'success');
+            }
+        }
+
+        /**
+         * Calculates overall statistics based on selected year/month and displays them.
+         */
+        function calculateStatistics() {
+            const year = statsYearSelect.value;
+            const month = statsMonthSelect.value;
+
+            let activeEmployeesCount = 0; // Count of currently active employees
+            let totalOvertimeHours = 0;
+            let totalCompLeaveUsedHours = 0; // Hours used via '调休'
+            let totalAnnualLeaveUsedHours = 0; // Hours used via '公休'
+            let totalSickLeaveHours = 0; // Hours recorded as '病事假'
+
+            // Count active employees
+            Object.values(employees).forEach(emp => {
+                if (!emp.is_resigned) {
+                    activeEmployeesCount++;
+                }
+            });
+
+            // Iterate through all attendance records to sum up hours based on filters
+            Object.values(attendance).flat().forEach(record => { // Flatten all records into one array
+                let recordDate;
+                try {
+                    const datePart = record.date.split(' ')[0]; // Use start date for filtering
+                    recordDate = new Date(datePart);
+                    if (isNaN(recordDate.getTime())) throw new Error("Invalid Date");
+                } catch (e) {
+                    return; // Skip records with invalid dates
+                }
+
+                // Apply year and month filters
+                if (year !== '全部' && recordDate.getFullYear().toString() !== year) return;
+                if (month !== '全部' && (recordDate.getMonth() + 1).toString().padStart(2, '0') !== month) return;
+
+                // Sum hours based on type
+                const hours = record.hours;
+                switch (record.type) {
+                    case '加班': totalOvertimeHours += hours; break;
+                    case '调休': totalCompLeaveUsedHours += hours; break;
+                    case '公休': totalAnnualLeaveUsedHours += hours; break;
+                    case '病事假': default: totalSickLeaveHours += hours; break;
+                }
+            });
+
+            // Prepare statistics text
+            const periodDesc = `${year === '全部' ? '所有时间' : year + '年'}${month === '全部' ? '' : month + '月'}`;
+            // Avoid division by zero for averages
+            const avgDivisor = activeEmployeesCount > 0 ? activeEmployeesCount : 1;
+            const totalEmployeeCount = Object.keys(employees).length;
+
+            const statsText = `
+统计时段：${periodDesc}
+
+总员工数：${totalEmployeeCount} 人
+当前在职员工数：${activeEmployeesCount} 人
+
+--- 时段内发生总计 (天) ---
+总加班：${hoursToDays(totalOvertimeHours).toFixed(2)}
+总调休：${hoursToDays(totalCompLeaveUsedHours).toFixed(2)}
+总公休：${hoursToDays(totalAnnualLeaveUsedHours).toFixed(2)}
+总请假：${hoursToDays(totalSickLeaveHours).toFixed(2)}
+
+--- 人均统计 (基于当前在职员工) ---
+人均加班：${(hoursToDays(totalOvertimeHours) / avgDivisor).toFixed(2)} 天
+人均调休：${(hoursToDays(totalCompLeaveUsedHours) / avgDivisor).toFixed(2)} 天
+人均公休：${(hoursToDays(totalAnnualLeaveUsedHours) / avgDivisor).toFixed(2)} 天
+人均请假：${(hoursToDays(totalSickLeaveHours) / avgDivisor).toFixed(2)} 天
+            `.trim(); // Use trim to remove leading/trailing whitespace
+
+            // Display results
+            statsResultTextarea.value = statsText;
+        }
+
+        /**
+         * Backs up employee and attendance data to separate JSON files.
+         */
+        function backupData() {
+            try {
+                const timestamp = new Date().toISOString().slice(0, 19).replace(/[-:T]/g, ''); // YYYYMMDDHHMMSS format
+
+                // Create JSON blobs
+                const empBlob = new Blob([JSON.stringify(employees, null, 2)], { type: 'application/json;charset=utf-8' });
+                const attBlob = new Blob([JSON.stringify(attendance, null, 2)], { type: 'application/json;charset=utf-8' });
+
+                // Trigger downloads
+                downloadBlob(empBlob, `员工数据备份_${timestamp}.json`);
+                downloadBlob(attBlob, `考勤数据备份_${timestamp}.json`);
+
+                showAlert('数据已导出为JSON文件。请妥善保管。', 'success');
+            } catch (e) {
+                 console.error("Error during data backup:", e);
+                 showAlert(`数据备份失败: ${e.message}`, 'error');
+            }
+        }
+
+        /**
+         * Helper function to trigger the download of a Blob object.
+         * @param {Blob} blob - The Blob data to download.
+         * @param {string} filename - The desired filename for the download.
+         */
+        function downloadBlob(blob, filename) {
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none'; // Hide the link
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click(); // Simulate click to trigger download
+            // Clean up: remove link and revoke URL object
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+
+        /**
+         * Restores data from selected JSON files (employee and/or attendance).
+         */
+        function restoreData() {
+            const empFile = restoreEmpFileInput.files[0];
+            const attFile = restoreAttFileInput.files[0];
+            let promises = []; // To handle asynchronous file reading
+            let filesSelected = false; // Track if any file was actually selected
+
+            // --- Read Employee File (if selected) ---
+            if (empFile) {
+                filesSelected = true;
+                promises.push(readFileAsText(empFile).then(content => {
+                    try {
+                        const restored = JSON.parse(content);
+                        // Basic validation: Check if it's a non-null object
+                        if (typeof restored !== 'object' || restored === null || Array.isArray(restored)) {
+                             throw new Error("员工文件内容不是有效的JSON对象。");
+                        }
+                        // More specific validation (optional but recommended):
+                        // Check if keys look like IDs and values are objects with expected properties
+                        const isValidStructure = Object.values(restored).every(
+                            emp => typeof emp === 'object' && emp !== null && emp.hasOwnProperty('name') && emp.hasOwnProperty('position')
+                        );
+                        if (!isValidStructure) {
+                            throw new Error("员工文件JSON结构不符合预期 (缺少name或position属性?)。");
+                        }
+                        console.log("Employee file read and parsed successfully.");
+                        return { type: 'employees', data: restored }; // Return parsed data
+                    } catch (e) {
+                        console.error("Error processing employee file:", e);
+                        showAlert(`恢复员工数据失败 (${empFile.name}): ${e.message}`, 'error');
+                        return null; // Indicate failure for this file
+                    }
+                }));
+            }
+
+            // --- Read Attendance File (if selected) ---
+            if (attFile) {
+                filesSelected = true;
+                promises.push(readFileAsText(attFile).then(content => {
+                    try {
+                        const restored = JSON.parse(content);
+                         // Basic validation: Check if it's a non-null object
+                        if (typeof restored !== 'object' || restored === null || Array.isArray(restored)) {
+                             throw new Error("考勤文件内容不是有效的JSON对象。");
+                        }
+                        // More specific validation (optional):
+                        // Check if values are arrays (representing attendance records)
+                        const isValidStructure = Object.values(restored).every(Array.isArray);
+                        if (!isValidStructure) {
+                            throw new Error("考勤文件JSON结构不符合预期 (值应为数组)。");
+                        }
+                         console.log("Attendance file read and parsed successfully.");
+                        return { type: 'attendance', data: restored }; // Return parsed data
+                    } catch (e) {
+                        console.error("Error processing attendance file:", e);
+                        showAlert(`恢复考勤数据失败 (${attFile.name}): ${e.message}`, 'error');
+                        return null; // Indicate failure
+                    }
+                }));
+            }
+
+            // --- Process Results after Reading ---
+            if (!filesSelected) {
+                showAlert('请至少选择一个要恢复的数据文件。', 'warning');
+                return;
+            }
+
+            // Wait for all file reading promises to complete
+            Promise.all(promises).then(results => {
+                let changesMade = false;
+                let restoredEmployees = null;
+                let restoredAttendance = null;
+
+                // Process successful results
+                results.forEach(result => {
+                    if (result) { // Ignore null results (failures)
+                        if (result.type === 'employees') {
+                            restoredEmployees = result.data;
+                            changesMade = true;
+                        } else if (result.type === 'attendance') {
+                            restoredAttendance = result.data;
+                            changesMade = true;
+                        }
+                    }
+                });
+
+                // Apply changes if any successful restores occurred
+                if (changesMade) {
+                     if (confirm("确定要用选中的文件覆盖当前数据吗？\n\n此操作不可撤销！")) {
+                        // Apply restored data
+                        if (restoredEmployees !== null) {
+                            employees = restoredEmployees;
+                            console.log("Employees data restored in memory.");
+                            // Re-run validation/cleanup after restore
+                             Object.values(employees).forEach(emp => {
+                                if (emp.is_resigned === undefined) emp.is_resigned = false;
+                                emp.leave_balance = parseFloat(emp.leave_balance || 0);
+                                emp.annual_leave_balance = parseFloat(emp.annual_leave_balance || 0);
+                                emp.sick_leave_days = parseFloat(emp.sick_leave_days || 0);
+                            });
+                        }
+                        if (restoredAttendance !== null) {
+                            attendance = restoredAttendance;
+                             console.log("Attendance data restored in memory.");
+                             // Re-run validation/cleanup
+                            Object.values(attendance).forEach(records => {
+                                records.forEach(rec => { rec.hours = parseFloat(rec.hours || 0); });
+                            });
+                        }
+
+                        saveData(); // Save the newly restored data
+                        initializeAppUI(); // Re-initialize the entire UI with the new data
+                        showAlert('数据恢复成功！界面已刷新。', 'success');
+                    } else {
+                         showAlert('数据恢复已取消。', 'info');
+                    }
+
+                } else {
+                     showAlert('未能成功读取任何有效数据文件。请检查文件内容和格式。', 'warning');
+                }
+
+                // Clear file inputs regardless of success/failure
+                restoreEmpFileInput.value = '';
+                restoreAttFileInput.value = '';
+
+            }).catch(error => {
+                // Catch potential errors in Promise.all itself (less likely here)
+                console.error("Unexpected error during restore process:", error);
+                showAlert('恢复过程中发生意外错误。', 'error');
+            });
+        }
+
+        /**
+         * Reads a File object as text using FileReader.
+         * @param {File} file - The file to read.
+         * @returns {Promise<string>} A promise that resolves with the file content as text.
+         */
+        function readFileAsText(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = event => resolve(event.target.result); // Resolve with text content
+                reader.onerror = error => reject(error); // Reject on read error
+                reader.readAsText(file); // Start reading
+            });
+        }
+
+        // --- Export to CSV ---
+
+        /**
+         * Shows the modal for selecting the date range for CSV export.
+         */
+        function showExportModal() {
+            // Set default dates for export range (e.g., current month)
+            const today = new Date();
+            const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+            const lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0); // Day 0 of next month = last day of current
+
+            exportStartDateInput.value = formatDate(firstDayOfMonth);
+            exportEndDateInput.value = formatDate(lastDayOfMonth);
+
+            showModal('export-modal');
+        }
+
+        /**
+         * Generates and downloads a CSV file summarizing attendance within a selected date range.
+         */
+        function exportToCsv() {
+            const startDateStr = exportStartDateInput.value;
+            const endDateStr = exportEndDateInput.value;
+
+            // --- Validation ---
+            if (!startDateStr || !endDateStr) {
+                showAlert('请选择有效的导出日期范围！', 'warning');
+                return;
+            }
+            const startDate = new Date(startDateStr);
+            const endDate = new Date(endDateStr);
+             if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+                 showAlert('输入的日期无效！', 'warning');
+                 return;
+             }
+            // Set time to cover the entire end day
+            endDate.setHours(23, 59, 59, 999);
+            if (startDate > endDate) {
+                showAlert('开始日期不能晚于结束日期！', 'warning');
+                return;
+            }
+
+            // --- CSV Generation ---
+            let csvContent = "\uFEFF"; // Add BOM for Excel UTF-8 compatibility
+
+            // Define CSV Headers
+            const headers = [
+                '工号', '姓名', '职位', '状态', // Basic Info
+                '期间总加班(天)', '期间总调休(天)', '期间总公休(天)', '期间总请假(天)', // Summary Stats
+                '期末剩余补休(天)', '期末剩余公休(天)', // Ending Balances (Current)
+                '期间补休记录', '期间公休记录', '期间请假记录' // Detailed Records (Optional)
+            ];
+            // Add headers to CSV content, ensuring proper quoting
+            csvContent += headers.map(h => `"${h.replace(/"/g, '""')}"`).join(',') + "\r\n";
+
+            // Get sorted employee IDs
+            const sortedEmpIds = Object.keys(employees).sort((a, b) => a.localeCompare(b));
+
+            // Process each employee
+            sortedEmpIds.forEach(empId => {
+                const empData = employees[empId];
+                if (!empData) return; // Skip if data is missing
+
+                // Variables to store stats for the period for this employee
+                let periodOvertimeDays = 0;
+                let periodCompUsedDays = 0;
+                let periodAnnualUsedDays = 0;
+                let periodSickDays = 0;
+                let compRecordsDetail = []; // Array to store detailed strings
+                let annualRecordsDetail = [];
+                let sickRecordsDetail = [];
+
+                // Process attendance records within the date range
+                if (attendance[empId]) {
+                    const employeeRecords = attendance[empId];
+                    employeeRecords.forEach(record => {
+                        let recordStartDate; // Use the start date of the record for filtering
+                        try {
+                            const datePart = record.date.split(' ')[0];
+                            recordStartDate = new Date(datePart);
+                            if (isNaN(recordStartDate.getTime())) return; // Skip invalid dates
+                        } catch {
+                            return; // Skip if date parsing fails
+                        }
+
+                        // Check if the record's start date falls within the export range
+                        if (recordStartDate >= startDate && recordStartDate <= endDate) {
+                            const days = hoursToDays(record.hours);
+                            const displayDate = record.date; // Use the original date string for details
+                            const detail = `${displayDate}: ${days.toFixed(1)}天 (${record.reason || '无'})`;
+
+                            switch (record.type) {
+                                case '加班':
+                                    periodOvertimeDays += days;
+                                    compRecordsDetail.push(`${displayDate}: +${days.toFixed(1)}天 (${record.reason || '无'})`);
+                                    break;
+                                case '调休':
+                                    periodCompUsedDays += days;
+                                     compRecordsDetail.push(`${displayDate}: -${days.toFixed(1)}天 (${record.reason || '无'})`);
+                                    break;
+                                case '公休':
+                                    periodAnnualUsedDays += days;
+                                    annualRecordsDetail.push(detail);
+                                    break;
+                                case '病事假':
+                                default:
+                                    periodSickDays += days;
+                                    sickRecordsDetail.push(detail);
+                                    break;
+                            }
+                        }
+                    });
+                }
+
+                // Prepare row data for CSV
+                const rowData = [
+                    empId,
+                    empData.name,
+                    empData.position,
+                    empData.is_resigned ? '已离职' : '在职',
+                    periodOvertimeDays.toFixed(2),
+                    periodCompUsedDays.toFixed(2),
+                    periodAnnualUsedDays.toFixed(2),
+                    periodSickDays.toFixed(2),
+                    (empData.leave_balance || 0).toFixed(2), // Current remaining balance
+                    (empData.annual_leave_balance || 0).toFixed(2), // Current remaining balance
+                    compRecordsDetail.join('; '), // Join details with semicolon
+                    annualRecordsDetail.join('; '),
+                    sickRecordsDetail.join('; ')
+                ];
+
+                 // Add row to CSV, quoting each field to handle commas, quotes, and line breaks within data
+                csvContent += rowData.map(field => `"${String(field).replace(/"/g, '""')}"`).join(',') + "\r\n";
+            });
+
+            // --- Download ---
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const filename = `考勤统计_${startDateStr}_至_${endDateStr}.csv`;
+            downloadBlob(blob, filename);
+            closeModal('export-modal'); // Close the export modal after download starts
+            showAlert('CSV文件已开始下载。', 'success');
+        }
+
+
+        // --- Event Listeners Setup ---
+        function setupEventListeners() {
+            console.log("Setting up event listeners...");
+
+            // Login
+            loginBtn.addEventListener('click', handleLogin);
+            // Allow login on Enter key press in password field
+            passwordInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    handleLogin();
+                }
+            });
+
+            // Main Tabs
+            tabButtons.forEach(button => button.addEventListener('click', switchTab));
+
+            // --- Employee Tab ---
+            // Search/Filter listeners (trigger update on button click or input/change)
+            searchEmpBtn.addEventListener('click', updateEmployeeTable);
+            searchEmpIdInput.addEventListener('input', updateEmployeeTable); // Instant search on ID input
+            searchEmpNameInput.addEventListener('input', updateEmployeeTable); // Instant search on Name input
+            searchEmpPositionSelect.addEventListener('change', updateEmployeeTable); // Filter on position change
+            // Action Buttons
+            addEmpBtn.addEventListener('click', () => showEmployeeModal()); // Pass no ID to indicate 'add' mode
+            exportCsvBtn.addEventListener('click', showExportModal);
+
+            // --- Attendance Tab ---
+            // Filter listeners
+            filterAttBtn.addEventListener('click', updateAttendanceTable);
+            filterAttYearSelect.addEventListener('change', updateAttendanceTable); // Filter on year change
+            filterAttMonthSelect.addEventListener('change', updateAttendanceTable); // Filter on month change
+            filterAttTypeSelect.addEventListener('change', updateAttendanceTable); // Filter on type change
+            // Action Buttons
+            addAttendanceBtn.addEventListener('click', showBatchAttendanceModal);
+
+            // --- Employee Modal ---
+            saveEmpBtn.addEventListener('click', saveEmployee);
+            deleteEmpBtn.addEventListener('click', deleteEmployee);
+            resignEmpBtn.addEventListener('click', markEmployeeResigned);
+            // Attendance record filtering inside modal
+            modalFilterRecordsBtn.addEventListener('click', () => {
+                if (currentEditEmpId) { updateModalAttendanceTables(currentEditEmpId); }
+            });
+            modalRecordYearSelect.addEventListener('change', () => { if (currentEditEmpId) updateModalAttendanceTables(currentEditEmpId); });
+            modalRecordMonthSelect.addEventListener('change', () => { if (currentEditEmpId) updateModalAttendanceTables(currentEditEmpId); });
+            // Record type tab switching inside modal
+            modalRecordTabButtons.forEach(button => button.addEventListener('click', switchRecordTab));
+
+            // --- Batch Attendance Modal ---
+            batchSearchEmpInput.addEventListener('input', filterBatchEmployees); // Filter list on search input
+            batchSelectAllHeaderCheckbox.addEventListener('change', toggleSelectAllBatch); // Header checkbox action
+            batchSelectAllBtn.addEventListener('click', batchSelectAllVisible); // "Select All" button
+            batchSelectNoneBtn.addEventListener('click', batchSelectNoneVisible); // "Select None" button
+            batchAttDaysInput.addEventListener('input', updateBatchPreview); // Update preview on days input
+            batchAttTypeSelect.addEventListener('change', updateBatchPreview); // Update preview on type change
+            saveBatchBtn.addEventListener('click', saveBatchAttendance);
+
+            // --- Edit Attendance Modal ---
+            saveEditAttBtn.addEventListener('click', saveAttendanceEdit);
+            deleteAttBtn.addEventListener('click', deleteAttendanceRecord);
+
+            // --- Export Modal ---
+            confirmExportBtn.addEventListener('click', exportToCsv);
+
+            // --- Sidebar ---
+            applyAnnualBtn.addEventListener('click', applyAnnualLeave);
+            calcStatsBtn.addEventListener('click', calculateStatistics);
+            backupBtn.addEventListener('click', backupData);
+            restoreBtn.addEventListener('click', restoreData);
+
+            console.log("Event listeners setup complete.");
+        }
+
+
+        // --- Initial Load ---
+        // Use DOMContentLoaded to ensure the HTML is fully parsed before running scripts
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log("DOM fully loaded and parsed.");
+            try {
+                loadData(); // Load data from localStorage first
+                setupEventListeners(); // Then setup listeners that might depend on DOM elements
+                console.log("Initial data load and listener setup complete.");
+                // Note: We don't call initializeAppUI here, it's called *after* successful login.
+            } catch (error) {
+                 console.error("Error during initial setup on DOMContentLoaded:", error);
+                 showAlert(`页面初始化时发生严重错误: ${error.message}. 部分功能可能无法使用。`, 'error');
+            }
+        });
+
+    </script>
 
 </body>
 </html>

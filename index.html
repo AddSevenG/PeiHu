@@ -1,1 +1,1636 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>工作日志管理系统 (Firestore版)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* 自定义一些基础样式 */
+        body { font-family: 'Inter', sans-serif; }
+        /* 隐藏元素的辅助类 */
+        .hidden { display: none; }
+        /* 简单的加载动画 */
+        .loader {
+            border: 4px solid #f3f3f3; /* Light grey */
+            border-top: 4px solid #3498db; /* Blue */
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            margin-left: 10px;
+            vertical-align: middle; /* 垂直居中 */
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        /* 表格样式 */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+        th, td {
+            border: 1px solid #e2e8f0;
+            padding: 0.75rem;
+            text-align: left;
+            vertical-align: middle; /* 垂直居中单元格内容 */
+        }
+        th {
+            background-color: #f7fafc;
+            font-weight: 600;
+        }
+        /* 按钮样式 */
+        button, input[type="submit"] {
+            transition: background-color 0.3s ease;
+        }
+        /* 消息提示框 */
+        .message-box {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 1rem 1.5rem;
+            border-radius: 0.375rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+            max-width: 300px; /* 限制最大宽度 */
+            word-wrap: break-word; /* 自动换行 */
+        }
+        .message-box.show {
+            opacity: 1;
+        }
+        .message-box-success {
+            background-color: #d1fae5; /* green-100 */
+            color: #065f46; /* green-800 */
+            border: 1px solid #6ee7b7; /* green-300 */
+        }
+        .message-box-error {
+            background-color: #fee2e2; /* red-100 */
+            color: #991b1b; /* red-800 */
+            border: 1px solid #fca5a5; /* red-300 */
+        }
+        /* 使表格单元格内的输入框和按钮垂直对齐更好 */
+        td input[type="number"], td button {
+             vertical-align: middle;
+        }
+    </style>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
 
+    <div class="bg-white p-8 rounded-lg shadow-md w-full max-w-4xl">
+        <h1 class="text-2xl font-bold mb-6 text-center text-gray-700">工作日志管理系统 (Firestore版)</h1>
+
+        <div id="message-container"></div>
+
+        <div id="login-view">
+            <h2 class="text-xl font-semibold mb-4 text-gray-600">登录</h2>
+            <form id="login-form" class="space-y-4">
+                <div>
+                    <label for="login-email" class="block text-sm font-medium text-gray-700">邮箱</label>
+                    <input type="email" id="login-email" name="email" required autocomplete="email" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                </div>
+                <div>
+                    <label for="login-password" class="block text-sm font-medium text-gray-700">密码</label>
+                    <input type="password" id="login-password" name="password" required autocomplete="current-password" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                </div>
+                <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    登录 <span id="login-loader" class="loader hidden"></span>
+                </button>
+            </form>
+            <p class="mt-4 text-center text-sm text-gray-600">
+                还没有账户? <button id="show-register-btn" class="font-medium text-indigo-600 hover:text-indigo-500">立即注册 (仅限用户)</button>
+            </p>
+        </div>
+
+        <div id="register-view" class="hidden">
+            <h2 class="text-xl font-semibold mb-4 text-gray-600">用户注册</h2>
+            <form id="register-form" class="space-y-4">
+                <div>
+                    <label for="register-name" class="block text-sm font-medium text-gray-700">姓名 (唯一)</label>
+                    <input type="text" id="register-name" name="name" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                </div>
+                <div>
+                    <label for="register-employeeId" class="block text-sm font-medium text-gray-700">工号 (唯一)</label>
+                    <input type="text" id="register-employeeId" name="employeeId" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                </div>
+                 <div>
+                    <label for="register-email" class="block text-sm font-medium text-gray-700">邮箱 (用于登录)</label>
+                    <input type="email" id="register-email" name="email" required autocomplete="email" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                </div>
+                <div>
+                    <label for="register-password" class="block text-sm font-medium text-gray-700">密码</label>
+                    <input type="password" id="register-password" name="password" required autocomplete="new-password" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                </div>
+                 <div>
+                    <label for="register-confirm-password" class="block text-sm font-medium text-gray-700">确认密码</label>
+                    <input type="password" id="register-confirm-password" name="confirmPassword" required autocomplete="new-password" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                </div>
+                <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                    注册 <span id="register-loader" class="loader hidden"></span>
+                </button>
+            </form>
+            <p class="mt-4 text-center text-sm text-gray-600">
+                已有账户? <button id="show-login-btn" class="font-medium text-indigo-600 hover:text-indigo-500">返回登录</button>
+            </p>
+        </div>
+
+        <div id="user-dashboard" class="hidden">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-semibold text-gray-600">用户仪表盘 - <span id="user-welcome-name"></span> (<span id="user-welcome-id"></span>)</h2>
+                <button id="user-logout-btn" class="py-1 px-3 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">登出</button>
+            </div>
+
+            <div class="bg-gray-50 p-4 rounded-lg mb-6">
+                <h3 class="text-lg font-medium mb-3 text-gray-700">提交新的工作日志</h3>
+                <form id="log-submission-form" class="space-y-3">
+                    <div>
+                        <label for="log-type" class="block text-sm font-medium text-gray-700">工作类型</label>
+                        <select id="log-type" name="type" required class="mt-1 block w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                            </select>
+                    </div>
+                    <div>
+                        <label for="log-date" class="block text-sm font-medium text-gray-700">日期</label>
+                        <input type="date" id="log-date" name="date" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                    </div>
+                    <div>
+                        <label for="log-details" class="block text-sm font-medium text-gray-700">具体事项</label>
+                        <textarea id="log-details" name="details" rows="3" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"></textarea>
+                    </div>
+                    <div>
+                        <label for="log-duration" class="block text-sm font-medium text-gray-700">所占时长 (小时)</label>
+                        <input type="number" id="log-duration" name="duration" step="0.1" min="0.1" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                    </div>
+                    <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        提交日志 <span id="submit-log-loader" class="loader hidden"></span>
+                    </button>
+                </form>
+            </div>
+
+            <div>
+                <h3 class="text-lg font-medium mb-3 text-gray-700">我提交的日志</h3>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">日期</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">类型</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">事项</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">时长(h)</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">状态</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">得分</th>
+                            </tr>
+                        </thead>
+                        <tbody id="user-logs-table-body" class="bg-white divide-y divide-gray-200">
+                            <tr><td colspan="6" class="text-center py-4 text-gray-500">加载中...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="reviewer-dashboard" class="hidden">
+             <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-semibold text-gray-600">审查员仪表盘 - <span id="reviewer-welcome-name"></span></h2>
+                <button id="reviewer-logout-btn" class="py-1 px-3 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">登出</button>
+            </div>
+
+            <div class="mb-6">
+                <h3 class="text-lg font-medium mb-3 text-gray-700">待审查日志</h3>
+                 <p class="text-sm text-gray-600 mb-2">您可以审查的工作类型: <span id="reviewer-permissions" class="font-medium">加载中...</span></p>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">提交用户</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">工号</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">日期</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">类型</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">事项</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">时长(h)</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">评分 (0-10)</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="review-logs-table-body" class="bg-white divide-y divide-gray-200">
+                            <tr><td colspan="8" class="text-center py-4 text-gray-500">加载中...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div>
+                <h3 class="text-lg font-medium mb-3 text-gray-700">导出评分报告</h3>
+                <form id="export-form" class="flex items-end space-x-4 bg-gray-50 p-4 rounded-lg">
+                    <div>
+                        <label for="export-start-date" class="block text-sm font-medium text-gray-700">开始日期</label>
+                        <input type="date" id="export-start-date" name="startDate" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                    </div>
+                    <div>
+                        <label for="export-end-date" class="block text-sm font-medium text-gray-700">结束日期</label>
+                        <input type="date" id="export-end-date" name="endDate" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                    </div>
+                    <button type="submit" class="py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500">
+                        导出报告 (CSV) <span id="export-loader" class="loader hidden"></span>
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div id="admin-dashboard" class="hidden">
+             <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-semibold text-gray-600">管理员仪表盘</h2>
+                <button id="admin-logout-btn" class="py-1 px-3 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">登出</button>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <h3 class="text-lg font-medium mb-3 text-gray-700">用户管理</h3>
+                    <div class="overflow-x-auto max-h-60 overflow-y-auto border border-gray-200 rounded">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-100 sticky top-0">
+                                <tr>
+                                    <th scope="col" class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">姓名</th>
+                                    <th scope="col" class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">工号</th>
+                                    <th scope="col" class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-users-table-body" class="bg-white divide-y divide-gray-200">
+                                <tr><td colspan="3" class="text-center py-4 text-gray-500">加载中...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <h3 class="text-lg font-medium mb-3 text-gray-700">审查员管理</h3>
+                    <form id="add-reviewer-form" class="space-y-3 mb-4 border-b pb-4 border-gray-200">
+                         <h4 class="text-md font-medium text-gray-600">添加审查员</h4>
+                        <div>
+                            <label for="reviewer-email" class="block text-sm font-medium text-gray-700">审查员邮箱 (用于登录)</label>
+                            <input type="email" id="reviewer-email" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                        </div>
+                        <div>
+                            <label for="reviewer-username-display" class="block text-sm font-medium text-gray-700">显示名称 (可选)</label>
+                            <input type="text" id="reviewer-username-display" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                        </div>
+                        <div>
+                            <label for="reviewer-password" class="block text-sm font-medium text-gray-700">初始密码</label>
+                            <input type="password" id="reviewer-password" required autocomplete="new-password" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                        </div>
+                        <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            添加审查员 <span id="add-reviewer-loader" class="loader hidden"></span>
+                        </button>
+                    </form>
+
+                     <h4 class="text-md font-medium text-gray-600 mt-6 mb-2">现有审查员</h4>
+                     <div class="overflow-x-auto max-h-60 overflow-y-auto border border-gray-200 rounded">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-100 sticky top-0">
+                                <tr>
+                                    <th scope="col" class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">用户名/邮箱</th>
+                                    <th scope="col" class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">权限(工作类型)</th>
+                                    <th scope="col" class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-reviewers-table-body" class="bg-white divide-y divide-gray-200">
+                                <tr><td colspan="3" class="text-center py-4 text-gray-500">加载中...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+             <div class="bg-gray-50 p-4 rounded-lg mt-8">
+                <h3 class="text-lg font-medium mb-3 text-gray-700">工作类型管理</h3>
+                <form id="add-work-type-form" class="flex items-end space-x-4 mb-4 border-b pb-4 border-gray-200">
+                    <div>
+                        <label for="work-type-name" class="block text-sm font-medium text-gray-700">新工作类型名称</label>
+                        <input type="text" id="work-type-name" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                    </div>
+                    <button type="submit" class="py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                        添加类型 <span id="add-type-loader" class="loader hidden"></span>
+                    </button>
+                </form>
+                <div class="overflow-x-auto max-h-40 overflow-y-auto border border-gray-200 rounded">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-100 sticky top-0">
+                            <tr>
+                                <th scope="col" class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">工作类型</th>
+                                <th scope="col" class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admin-work-types-table-body" class="bg-white divide-y divide-gray-200">
+                           <tr><td colspan="2" class="text-center py-4 text-gray-500">加载中...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="permission-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden flex items-center justify-center z-50 p-4">
+                <div class="relative mx-auto p-5 border w-full max-w-md shadow-lg rounded-md bg-white">
+                    <div class="mt-3">
+                        <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4 text-center">设置审查员权限: <span id="modal-reviewer-name"></span></h3>
+                        <div id="permission-checkboxes" class="text-left space-y-2 max-h-60 overflow-y-auto mb-4 border p-3 rounded">
+                            <p class="text-sm text-gray-500">加载权限选项...</p>
+                        </div>
+                        <div class="items-center px-4 py-3 space-y-2">
+                            <button id="save-permissions-btn" class="px-4 py-2 bg-green-500 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-300 flex justify-center items-center">
+                                保存权限 <span id="save-permission-loader" class="loader hidden"></span>
+                            </button>
+                            <button id="close-modal-btn" class="px-4 py-2 bg-gray-300 text-gray-800 text-base font-medium rounded-md w-full shadow-sm hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300">
+                                关闭
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+             <div id="change-password-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden flex items-center justify-center z-50 p-4">
+                <div class="relative mx-auto p-5 border w-full max-w-md shadow-lg rounded-md bg-white">
+                     <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4 text-center">修改审查员密码: <span id="modal-change-pwd-reviewer-name"></span></h3>
+                     <p class="text-xs text-center text-red-600 mb-3">警告：此操作将直接重置审查员密码。</p>
+                    <form id="change-password-form" class="space-y-4">
+                        <input type="hidden" id="change-pwd-reviewer-uid"> <div>
+                            <label for="new-password" class="block text-sm font-medium text-gray-700">新密码</label>
+                            <input type="password" id="new-password" required autocomplete="new-password" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                        </div>
+                         <div>
+                            <label for="confirm-new-password" class="block text-sm font-medium text-gray-700">确认新密码</label>
+                            <input type="password" id="confirm-new-password" required autocomplete="new-password" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                        </div>
+                        <div class="items-center px-4 py-3 space-y-2">
+                             <button type="submit" class="px-4 py-2 bg-blue-500 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-300 flex justify-center items-center">
+                                保存新密码 <span id="save-pwd-loader" class="loader hidden"></span>
+                            </button>
+                            <button type="button" id="close-pwd-modal-btn" class="px-4 py-2 bg-gray-300 text-gray-800 text-base font-medium rounded-md w-full shadow-sm hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300">
+                                取消
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div> </div> <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+    <script>
+        // --- Firebase Configuration ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyB1rO4oNKduVmyRqUj6holFI2UwPj-5VqU", // 使用你自己的 API Key
+            authDomain: "glgz-5d187.firebaseapp.com",
+            projectId: "glgz-5d187",
+            storageBucket: "glgz-5d187.appspot.com", // 注意: 通常是 .appspot.com
+            messagingSenderId: "740580502738",
+            appId: "1:740580502738:web:8685e74bc5d0653edd910b",
+            measurementId: "G-29G5T44LW5" // 可选
+        };
+
+        // --- Initialize Firebase ---
+        firebase.initializeApp(firebaseConfig);
+
+        // --- Get Firebase Service Instances ---
+        const db = firebase.firestore();
+        const auth = firebase.auth();
+        // const functions = firebase.functions(); // 如果使用 Cloud Functions
+        // const analytics = firebase.analytics(); // 如果启用 Analytics
+        console.log("Firebase Initialized.");
+
+        // --- DOM Element References (获取所有需要的 HTML 元素) ---
+        const loginView = document.getElementById('login-view');
+        const registerView = document.getElementById('register-view');
+        const userDashboard = document.getElementById('user-dashboard');
+        const reviewerDashboard = document.getElementById('reviewer-dashboard');
+        const adminDashboard = document.getElementById('admin-dashboard');
+
+        const loginForm = document.getElementById('login-form');
+        const registerForm = document.getElementById('register-form');
+        const logSubmissionForm = document.getElementById('log-submission-form');
+        const exportForm = document.getElementById('export-form');
+        const addReviewerForm = document.getElementById('add-reviewer-form');
+        const addWorkTypeForm = document.getElementById('add-work-type-form');
+        const changePasswordForm = document.getElementById('change-password-form');
+
+        const showRegisterBtn = document.getElementById('show-register-btn');
+        const showLoginBtn = document.getElementById('show-login-btn');
+        const userLogoutBtn = document.getElementById('user-logout-btn');
+        const reviewerLogoutBtn = document.getElementById('reviewer-logout-btn');
+        const adminLogoutBtn = document.getElementById('admin-logout-btn');
+
+        const userWelcomeName = document.getElementById('user-welcome-name');
+        const userWelcomeId = document.getElementById('user-welcome-id');
+        const reviewerWelcomeName = document.getElementById('reviewer-welcome-name');
+        const reviewerPermissions = document.getElementById('reviewer-permissions');
+
+        const logTypeSelect = document.getElementById('log-type');
+        const userLogsTableBody = document.getElementById('user-logs-table-body');
+        const reviewLogsTableBody = document.getElementById('review-logs-table-body');
+        const adminUsersTableBody = document.getElementById('admin-users-table-body');
+        const adminReviewersTableBody = document.getElementById('admin-reviewers-table-body');
+        const adminWorkTypesTableBody = document.getElementById('admin-work-types-table-body');
+
+        const permissionModal = document.getElementById('permission-modal');
+        const modalReviewerName = document.getElementById('modal-reviewer-name');
+        const permissionCheckboxes = document.getElementById('permission-checkboxes');
+        const savePermissionsBtn = document.getElementById('save-permissions-btn');
+        const closeModalBtn = document.getElementById('close-modal-btn');
+
+        const changePasswordModal = document.getElementById('change-password-modal');
+        const modalChangePwdReviewerName = document.getElementById('modal-change-pwd-reviewer-name');
+        const changePwdReviewerUidInput = document.getElementById('change-pwd-reviewer-uid'); // Changed ID
+        const newPasswordInput = document.getElementById('new-password');
+        const confirmNewPasswordInput = document.getElementById('confirm-new-password');
+        const closePwdModalBtn = document.getElementById('close-pwd-modal-btn');
+
+        const messageContainer = document.getElementById('message-container');
+
+        // --- Global State Variables ---
+        let workTypes = []; // 存储工作类型
+        let currentUser = null; // Firebase Auth user object
+        let currentUserRole = null; // 'user', 'reviewer', 'admin'
+        let currentUserDetails = null; // Firestore data for the logged-in user
+        let adminUserDataCache = []; // 缓存管理员视图的用户列表
+        let adminReviewerDataCache = []; // 缓存管理员视图的审查员列表
+        let adminLogDataCache = []; // 缓存管理员视图的日志 (如果需要)
+
+        // --- Utility Functions ---
+
+        // 显示消息提示
+        function showMessage(message, type = 'success') {
+            const messageBox = document.createElement('div');
+            messageBox.textContent = message;
+            messageBox.className = `message-box ${type === 'success' ? 'message-box-success' : 'message-box-error'}`;
+            // 清除之前的消息，避免堆积
+            while (messageContainer.firstChild) {
+                messageContainer.removeChild(messageContainer.firstChild);
+            }
+            messageContainer.appendChild(messageBox);
+
+            // Trigger fade in
+            setTimeout(() => {
+                messageBox.classList.add('show');
+            }, 10);
+
+            // Auto hide after 3 seconds
+            setTimeout(() => {
+                messageBox.classList.remove('show');
+                setTimeout(() => {
+                    if (messageContainer.contains(messageBox)) {
+                         messageContainer.removeChild(messageBox);
+                    }
+                }, 500); // Match CSS transition
+            }, 3000);
+        }
+
+        // 显示/隐藏加载指示器
+        function toggleLoader(loaderId, show) {
+            const loader = document.getElementById(loaderId);
+            if (loader) {
+                loader.classList.toggle('hidden', !show);
+                // 同时禁用/启用关联的提交按钮
+                const button = loader.closest('button[type="submit"], button');
+                if (button) {
+                    button.disabled = show;
+                }
+            }
+        }
+
+        // 生成唯一ID (现在主要用于前端临时标识，Firestore 会生成自己的文档 ID)
+        function generateId() {
+            return Date.now().toString(36) + Math.random().toString(36).substring(2);
+        }
+
+        // --- View Navigation ---
+        function showView(viewElement) {
+            loginView.classList.add('hidden');
+            registerView.classList.add('hidden');
+            userDashboard.classList.add('hidden');
+            reviewerDashboard.classList.add('hidden');
+            adminDashboard.classList.add('hidden');
+            if (viewElement) {
+                viewElement.classList.remove('hidden');
+            } else {
+                console.error("Attempted to show an invalid view element.");
+                loginView.classList.remove('hidden'); // Fallback to login
+            }
+        }
+
+        function showLoginView() {
+            showView(loginView);
+            if(loginForm) loginForm.reset();
+        }
+
+        function showRegisterView() {
+            showView(registerView);
+             if(registerForm) registerForm.reset();
+        }
+
+        // 根据角色导航到对应的仪表盘
+        function navigateToDashboard(role) {
+            console.log(`Navigating to dashboard for role: ${role}`);
+            switch (role) {
+                case 'user':
+                    showView(userDashboard);
+                    renderUserDashboard(); // 加载并渲染用户数据
+                    break;
+                case 'reviewer':
+                    showView(reviewerDashboard);
+                    renderReviewerDashboard(); // 加载并渲染审查员数据
+                    break;
+                case 'admin':
+                    showView(adminDashboard);
+                    renderAdminDashboard(); // 加载并渲染管理员数据
+                    break;
+                default:
+                    console.warn(`Unknown role "${role}", redirecting to login.`);
+                    showLoginView(); // 未知角色则返回登录页
+            }
+        }
+
+        // --- Authentication Logic ---
+
+        // 监听认证状态变化
+        auth.onAuthStateChanged(async (user) => {
+            toggleLoader('login-loader', false); // 隐藏登录加载器
+            toggleLoader('register-loader', false); // 隐藏注册加载器
+
+            if (user) {
+                // 用户已登录
+                currentUser = user;
+                console.log("用户已登录，UID:", currentUser.uid);
+                await loadUserDataAndDetermineRole(currentUser.uid); // 加载用户角色和数据
+            } else {
+                // 用户已登出
+                currentUser = null;
+                currentUserRole = null;
+                currentUserDetails = null;
+                // 清理缓存和界面
+                workTypes = [];
+                adminUserDataCache = [];
+                adminReviewerDataCache = [];
+                adminLogDataCache = [];
+                // 清空可能显示的列表
+                if(userLogsTableBody) userLogsTableBody.innerHTML = '';
+                if(reviewLogsTableBody) reviewLogsTableBody.innerHTML = '';
+                if(adminUsersTableBody) adminUsersTableBody.innerHTML = '';
+                if(adminReviewersTableBody) adminReviewersTableBody.innerHTML = '';
+                if(adminWorkTypesTableBody) adminWorkTypesTableBody.innerHTML = '';
+
+                sessionStorage.removeItem('currentUserRole'); // 清理会话存储
+                sessionStorage.removeItem('currentUserDetails');
+                showLoginView(); // 显示登录界面
+                console.log("用户已登出。");
+            }
+        });
+
+        // 加载用户数据并确定角色
+        async function loadUserDataAndDetermineRole(uid) {
+            console.log(`加载 UID: ${uid} 的数据和角色...`);
+            try {
+                // 尝试在各个角色集合中查找用户
+                const userDoc = await db.collection('users').doc(uid).get();
+                if (userDoc.exists) {
+                    currentUserRole = 'user';
+                    currentUserDetails = { uid: uid, ...userDoc.data() }; // 存储 UID 和 Firestore 数据
+                    console.log("角色确定: user", currentUserDetails);
+                    sessionStorage.setItem('currentUserRole', currentUserRole);
+                    sessionStorage.setItem('currentUserDetails', JSON.stringify(currentUserDetails));
+                    await loadInitialConfig(); // 加载工作类型等配置
+                    navigateToDashboard(currentUserRole);
+                    return;
+                }
+
+                const reviewerDoc = await db.collection('reviewers').doc(uid).get();
+                if (reviewerDoc.exists) {
+                    currentUserRole = 'reviewer';
+                    currentUserDetails = { uid: uid, ...reviewerDoc.data() };
+                     console.log("角色确定: reviewer", currentUserDetails);
+                    sessionStorage.setItem('currentUserRole', currentUserRole);
+                     sessionStorage.setItem('currentUserDetails', JSON.stringify(currentUserDetails));
+                    await loadInitialConfig();
+                    navigateToDashboard(currentUserRole);
+                    return;
+                }
+
+                const adminDoc = await db.collection('admins').doc(uid).get();
+                if (adminDoc.exists) {
+                    currentUserRole = 'admin';
+                    currentUserDetails = { uid: uid, ...adminDoc.data() };
+                    console.log("角色确定: admin", currentUserDetails);
+                    sessionStorage.setItem('currentUserRole', currentUserRole);
+                    sessionStorage.setItem('currentUserDetails', JSON.stringify(currentUserDetails));
+                    await loadInitialConfig();
+                    navigateToDashboard(currentUserRole);
+                    return;
+                }
+
+                // 如果 Auth 成功但 Firestore 中找不到对应角色记录
+                console.error("用户已认证，但在 Firestore 中未找到角色信息！UID:", uid);
+                showMessage("登录异常：无法确定用户角色。", "error");
+                await handleLogout(); // 强制登出
+
+            } catch (error) {
+                console.error("加载用户数据或确定角色时出错:", error);
+                showMessage("加载用户信息失败。", "error");
+                await handleLogout(); // 出错时强制登出
+            }
+        }
+
+        // 处理登录表单提交
+        async function handleLogin(event) {
+            event.preventDefault();
+            toggleLoader('login-loader', true);
+            const email = loginForm.querySelector('#login-email').value.trim();
+            const password = loginForm.querySelector('#login-password').value;
+
+            if (!email || !password) {
+                showMessage("请输入邮箱和密码。", "error");
+                toggleLoader('login-loader', false);
+                return;
+            }
+
+            try {
+                // 使用 Firebase Auth 进行邮箱密码登录
+                await auth.signInWithEmailAndPassword(email, password);
+                // 登录成功后，onAuthStateChanged 会被触发，处理后续流程
+                // showMessage('登录成功!', 'success'); // 可以省略，因为会立即跳转
+            } catch (error) {
+                console.error("登录失败:", error);
+                let message = '登录失败，请检查邮箱或密码。';
+                if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+                    // 提供更具体的错误提示
+                    message = '邮箱或密码错误。';
+                } else if (error.code === 'auth/invalid-email') {
+                    message = '邮箱格式不正确。';
+                }
+                showMessage(message, 'error');
+                toggleLoader('login-loader', false);
+            }
+        }
+
+        // 处理注册表单提交
+        async function handleRegister(event) {
+            event.preventDefault();
+            toggleLoader('register-loader', true);
+            const name = registerForm.querySelector('#register-name').value.trim();
+            const employeeId = registerForm.querySelector('#register-employeeId').value.trim();
+            const email = registerForm.querySelector('#register-email').value.trim();
+            const password = registerForm.querySelector('#register-password').value;
+            const confirmPassword = registerForm.querySelector('#register-confirm-password').value;
+
+            // --- 输入验证 ---
+            if (!name || !employeeId || !email || !password || !confirmPassword) {
+                showMessage('所有字段均为必填项!', 'error');
+                toggleLoader('register-loader', false);
+                return;
+            }
+            if (password !== confirmPassword) {
+                showMessage('两次输入的密码不一致!', 'error');
+                toggleLoader('register-loader', false);
+                return;
+            }
+            // 可以在这里添加更复杂的密码强度验证
+
+            // --- 检查唯一性 (Firestore 查询) ---
+            try {
+                const nameQuery = db.collection('users').where('name', '==', name);
+                const idQuery = db.collection('users').where('employeeId', '==', employeeId);
+                const nameSnapshot = await nameQuery.get();
+                const idSnapshot = await idQuery.get();
+
+                if (!nameSnapshot.empty) {
+                    showMessage('该姓名已被注册!', 'error');
+                    toggleLoader('register-loader', false);
+                    return;
+                }
+                if (!idSnapshot.empty) {
+                    showMessage('该工号已被注册!', 'error');
+                    toggleLoader('register-loader', false);
+                    return;
+                }
+
+                // --- 创建用户 ---
+                // 1. 在 Firebase Authentication 中创建用户
+                const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+                const user = userCredential.user;
+                console.log("在 Auth 中创建用户成功:", user.uid);
+
+                // 2. 在 Firestore 的 'users' 集合中添加用户详细信息
+                await db.collection("users").doc(user.uid).set({
+                    name: name,
+                    employeeId: employeeId
+                    // email 字段可选，因为 Auth 中已经有了
+                });
+                console.log("用户信息已添加到 Firestore");
+
+                showMessage('注册成功! 请返回登录页面进行登录。', 'success');
+                await auth.signOut(); // 注册后登出，让用户手动登录
+                showLoginView(); // 显示登录视图
+
+            } catch (error) {
+                console.error("注册失败:", error);
+                let message = `注册失败: ${error.message}`;
+                if (error.code === 'auth/email-already-in-use') {
+                    message = '该邮箱已被注册!';
+                } else if (error.code === 'auth/weak-password') {
+                    message = '密码太弱，请设置更强的密码。';
+                } else if (error.code === 'auth/invalid-email') {
+                    message = '邮箱格式不正确。';
+                }
+                showMessage(message, 'error');
+            } finally {
+                toggleLoader('register-loader', false);
+            }
+        }
+
+        // 处理登出
+        async function handleLogout() {
+            console.log("正在尝试登出...");
+            try {
+                await auth.signOut();
+                // onAuthStateChanged 会处理 UI 的切换和状态清理
+                showMessage('已成功登出。', 'success');
+            } catch (error) {
+                 console.error("登出失败: ", error);
+                 showMessage('登出时发生错误。', 'error');
+            }
+        }
+
+        // --- Data Loading and Rendering ---
+
+        // 加载全局配置 (如工作类型)
+        async function loadInitialConfig() {
+            console.log("正在加载初始配置 (工作类型)...");
+            try {
+                const docRef = db.collection('config').doc('workTypes');
+                const docSnap = await docRef.get();
+                if (docSnap.exists && docSnap.data().types) {
+                    workTypes = docSnap.data().types.sort(); // 加载并排序
+                } else {
+                    console.log("未找到工作类型配置，将使用默认值并尝试创建。");
+                    workTypes = ['信息', '科研', '教学', '行政'].sort();
+                    // 尝试创建默认配置 (如果文档不存在)
+                    await docRef.set({ types: workTypes }, { merge: true }); // merge: true 避免覆盖其他可能存在的配置字段
+                }
+                console.log("工作类型已加载:", workTypes);
+                populateWorkTypeOptions(); // 填充下拉框
+            } catch (error) {
+                console.error("加载工作类型出错:", error);
+                workTypes = ['信息', '科研', '教学', '行政'].sort(); // 出错时使用默认值
+                populateWorkTypeOptions();
+                showMessage("加载工作类型配置失败。", "error");
+            }
+        }
+
+        // 填充工作类型下拉框 (用户提交表单)
+        function populateWorkTypeOptions() {
+            if (logTypeSelect) {
+                logTypeSelect.innerHTML = workTypes.map(type => `<option value="${type}">${type}</option>`).join('');
+            }
+             // 同时更新管理员权限模态框中的复选框 (如果可见)
+            if (permissionModal && !permissionModal.classList.contains('hidden')) {
+                 const currentUsername = permissionModal.dataset.editingUsername;
+                 if(currentUsername) {
+                    const reviewer = adminReviewerDataCache.find(r => r.username === currentUsername);
+                    renderPermissionCheckboxes(reviewer?.permissions || []);
+                 }
+            }
+        }
+
+        // --- 用户仪表盘逻辑 ---
+        async function renderUserDashboard() {
+            if (!currentUser || currentUserRole !== 'user' || !currentUserDetails) return;
+            console.log("渲染用户仪表盘...");
+
+            userWelcomeName.textContent = currentUserDetails.name || '用户';
+            userWelcomeId.textContent = currentUserDetails.employeeId || 'N/A';
+            populateWorkTypeOptions(); // 确保下拉框是最新的
+
+            // 从 Firestore 加载该用户的日志
+            userLogsTableBody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-gray-500">正在加载日志记录...</td></tr>';
+            try {
+                const logsSnapshot = await db.collection('workLogs')
+                                             .where('userId', '==', currentUserDetails.employeeId)
+                                             .orderBy('date', 'desc')
+                                             .orderBy('submittedAt', 'desc') // 添加提交时间排序，确保同一天内顺序正确
+                                             .get();
+                const userLogsData = logsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                renderUserLogsTable(userLogsData); // 渲染表格
+            } catch (error) {
+                console.error("加载用户日志出错:", error);
+                userLogsTableBody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-gray-500">加载日志记录失败</td></tr>';
+            }
+        }
+
+        // 渲染用户日志表格
+        function renderUserLogsTable(logs) {
+             if (!logs || logs.length === 0) {
+                    userLogsTableBody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-gray-500">暂无日志记录</td></tr>';
+                    return;
+             }
+             userLogsTableBody.innerHTML = logs.map(log => {
+                 // 格式化日期 (如果需要)
+                 let displayDate = log.date;
+                 if (log.date && typeof log.date.toDate === 'function') { // 检查是否是 Firestore Timestamp
+                    try {
+                       displayDate = log.date.toDate().toISOString().split('T')[0]; // 格式化为 YYYY-MM-DD
+                    } catch (e) { console.warn("日期格式化错误:", log.date); }
+                 } else if (typeof log.date === 'string' && log.date.includes('T')) {
+                     displayDate = log.date.split('T')[0]; // 处理 ISO 字符串
+                 }
+
+                 return `
+                  <tr>
+                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${displayDate || 'N/A'}</td>
+                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${log.type || 'N/A'}</td>
+                      <td class="px-6 py-4 text-sm text-gray-500 max-w-xs truncate" title="${log.details || ''}">${log.details || ''}</td>
+                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${log.duration !== undefined ? log.duration : '-'}</td>
+                      <td class="px-6 py-4 whitespace-nowrap text-sm">
+                          <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${log.status === 'reviewed' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}">
+                              ${log.status === 'reviewed' ? '已审查' : '待审查'}
+                          </span>
+                      </td>
+                      <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${log.score !== null && log.score !== undefined ? log.score : '-'}</td>
+                  </tr>
+              `;
+             }).join('');
+        }
+
+        // 处理用户提交日志
+        async function handleLogSubmit(event) {
+            event.preventDefault();
+            if (!currentUser || !currentUserDetails || currentUserRole !== 'user') return;
+            toggleLoader('submit-log-loader', true);
+
+            const type = logSubmissionForm.type.value;
+            const dateStr = logSubmissionForm.date.value; // 获取日期字符串
+            const details = logSubmissionForm.details.value.trim();
+            const duration = parseFloat(logSubmissionForm.duration.value);
+
+            if (!type || !dateStr || !details || isNaN(duration) || duration <= 0) {
+                showMessage('请填写所有必填项，并确保时长为正数。', 'error');
+                toggleLoader('submit-log-loader', false);
+                return;
+            }
+
+            // 将日期字符串转换为 Firestore Timestamp
+            let firestoreDate;
+            try {
+                // 注意：直接 new Date(dateStr) 可能有时区问题，但对于 YYYY-MM-DD 通常还好
+                // 更可靠的方式是确保 dateStr 符合 ISO 8601 或使用库处理
+                firestoreDate = firebase.firestore.Timestamp.fromDate(new Date(dateStr));
+            } catch (e) {
+                 showMessage('日期格式无效。', 'error');
+                 toggleLoader('submit-log-loader', false);
+                 return;
+            }
+
+
+            try {
+                const newLogData = {
+                    userId: currentUserDetails.employeeId,
+                    userName: currentUserDetails.name,
+                    submitterAuthUid: currentUser.uid, // 添加提交者的 Auth UID
+                    type: type,
+                    date: firestoreDate, // 使用 Timestamp 类型
+                    details: details,
+                    duration: duration,
+                    status: 'pending',
+                    score: null,
+                    submittedAt: firebase.firestore.FieldValue.serverTimestamp()
+                };
+                const docRef = await db.collection("workLogs").add(newLogData);
+                console.log("日志提交成功，文档 ID: ", docRef.id);
+
+                showMessage('工作日志提交成功!', 'success');
+                logSubmissionForm.reset();
+                // 重新加载用户日志
+                await renderUserDashboard();
+
+            } catch (error) {
+                console.error("提交日志出错:", error);
+                showMessage('提交日志时发生错误。', 'error');
+            } finally {
+                toggleLoader('submit-log-loader', false);
+            }
+        }
+
+        // --- 审查员仪表盘逻辑 ---
+        async function renderReviewerDashboard() {
+            if (!currentUser || currentUserRole !== 'reviewer' || !currentUserDetails) return;
+            console.log("渲染审查员仪表盘...");
+
+            reviewerWelcomeName.textContent = currentUserDetails.username || '审查员';
+            const allowedTypes = currentUserDetails.permissions || [];
+            reviewerPermissions.textContent = allowedTypes.length > 0 ? allowedTypes.join(', ') : '无';
+
+            if (allowedTypes.length === 0) {
+                  reviewLogsTableBody.innerHTML = '<tr><td colspan="8" class="text-center py-4 text-gray-500">您没有审查任何工作类型的权限</td></tr>';
+                  return;
+             }
+
+            reviewLogsTableBody.innerHTML = '<tr><td colspan="8" class="text-center py-4 text-gray-500">正在加载待审查日志...</td></tr>';
+            try {
+                const logsSnapshot = await db.collection('workLogs')
+                                             .where('status', '==', 'pending')
+                                             .where('type', 'in', allowedTypes)
+                                             .orderBy('submittedAt', 'asc')
+                                             .limit(50) // 限制一次加载数量，防止过多
+                                             .get();
+                 const logsToReview = logsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                 renderReviewerLogsTable(logsToReview);
+            } catch (error) {
+                 console.error("加载待审查日志出错:", error);
+                 reviewLogsTableBody.innerHTML = '<tr><td colspan="8" class="text-center py-4 text-gray-500">加载待审查日志失败</td></tr>';
+            }
+        }
+
+        // 渲染待审查日志表格
+        function renderReviewerLogsTable(logs) {
+            if (!logs || logs.length === 0) {
+                 reviewLogsTableBody.innerHTML = '<tr><td colspan="8" class="text-center py-4 text-gray-500">暂无待审查日志</td></tr>';
+                 return;
+            }
+            reviewLogsTableBody.innerHTML = logs.map(log => {
+                 let displayDate = log.date;
+                 if (log.date && typeof log.date.toDate === 'function') {
+                    try { displayDate = log.date.toDate().toISOString().split('T')[0]; } catch(e){}
+                 } else if (typeof log.date === 'string' && log.date.includes('T')) {
+                     displayDate = log.date.split('T')[0];
+                 }
+                return `
+                 <tr id="review-row-${log.id}">
+                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${log.userName || 'N/A'}</td>
+                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${log.userId || 'N/A'}</td>
+                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${displayDate || 'N/A'}</td>
+                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${log.type || 'N/A'}</td>
+                     <td class="px-6 py-4 text-sm text-gray-500 max-w-xs truncate" title="${log.details || ''}">${log.details || ''}</td>
+                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${log.duration !== undefined ? log.duration : '-'}</td>
+                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                         <input type="number" id="score-${log.id}" min="0" max="10" step="0.5" class="w-20 px-2 py-1 border border-gray-300 rounded-md text-sm" placeholder="0-10">
+                     </td>
+                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                         <button data-log-id="${log.id}" class="submit-score-btn text-indigo-600 hover:text-indigo-900">提交评分</button>
+                     </td>
+                 </tr>
+             `;
+            }).join('');
+        }
+
+        // 处理审查员提交评分
+        async function handleScoreSubmit(logId, scoreValue) {
+             const score = parseFloat(scoreValue);
+             if (isNaN(score) || score < 0 || score > 10) {
+                 showMessage('请输入有效的评分 (0-10 之间的数字)。', 'error');
+                 return;
+             }
+
+             const button = document.querySelector(`button[data-log-id="${logId}"]`);
+             if(button) button.disabled = true; // 禁用按钮防止重复提交
+
+             try {
+                 const logRef = db.collection("workLogs").doc(logId);
+                 await logRef.update({
+                     score: score,
+                     status: 'reviewed'
+                 });
+                 showMessage(`日志 [${logId.substring(0, 6)}...] 评分成功!`, 'success');
+
+                 // 从 UI 中移除已评分的行
+                 const rowToRemove = document.getElementById(`review-row-${logId}`);
+                 if(rowToRemove) {
+                     rowToRemove.remove();
+                     // 检查表格是否为空
+                    if (reviewLogsTableBody.children.length === 0) {
+                         reviewLogsTableBody.innerHTML = '<tr><td colspan="8" class="text-center py-4 text-gray-500">暂无待审查日志</td></tr>';
+                    }
+                 }
+             } catch (error) {
+                  console.error("提交评分出错:", error);
+                  showMessage('提交评分时发生错误。', 'error');
+                  if(button) button.disabled = false; // 出错时恢复按钮
+             }
+        }
+
+        // 处理导出报告
+        async function handleExport(event) {
+            event.preventDefault();
+            if (!currentUser || currentUserRole !== 'reviewer' || !currentUserDetails) return;
+            toggleLoader('export-loader', true);
+
+            const startDateStr = exportForm.startDate.value;
+            const endDateStr = exportForm.endDate.value;
+            const allowedTypes = currentUserDetails.permissions || [];
+
+            if (!startDateStr || !endDateStr) { /* ... validation ... */ toggleLoader('export-loader', false); return; }
+            if (new Date(startDateStr) > new Date(endDateStr)) { /* ... validation ... */ toggleLoader('export-loader', false); return; }
+            if (allowedTypes.length === 0) { showMessage('您没有导出任何类型的权限。', 'info'); toggleLoader('export-loader', false); return; }
+
+            // 将日期字符串转换为 Firestore Timestamp 进行查询
+            let startDateTs, endDateTs;
+            try {
+                // 设置结束时间为当天的最后一毫秒，以包含结束日期当天
+                const endOfDay = new Date(endDateStr);
+                endOfDay.setHours(23, 59, 59, 999);
+                startDateTs = firebase.firestore.Timestamp.fromDate(new Date(startDateStr));
+                endDateTs = firebase.firestore.Timestamp.fromDate(endOfDay);
+            } catch(e) {
+                 showMessage('日期格式无效。', 'error');
+                 toggleLoader('export-loader', false);
+                 return;
+            }
+
+
+            try {
+                // 查询符合条件的已审查日志
+                const logsSnapshot = await db.collection('workLogs')
+                                             .where('status', '==', 'reviewed')
+                                             .where('type', 'in', allowedTypes)
+                                             .where('date', '>=', startDateTs)
+                                             .where('date', '<=', endDateTs)
+                                             .orderBy('date', 'asc') // 按日期排序
+                                             .get();
+
+                const relevantLogs = logsSnapshot.docs.map(doc => ({id: doc.id, ...doc.data()}));
+
+                if (relevantLogs.length === 0) { /* ... no logs message ... */ toggleLoader('export-loader', false); return; }
+
+                // --- 按用户汇总数据 ---
+                const userScores = {};
+                relevantLogs.forEach(log => {
+                    if (log.score === null || log.score === undefined) return; // 跳过没有评分的
+
+                    if (!userScores[log.userId]) {
+                        userScores[log.userId] = {
+                            name: log.userName || '未知用户',
+                            totalScore: 0,
+                            logCount: 0,
+                            details: []
+                        };
+                    }
+                    userScores[log.userId].totalScore += log.score;
+                    userScores[log.userId].logCount += 1;
+                    let displayDate = log.date;
+                    if (log.date && typeof log.date.toDate === 'function') {
+                        try { displayDate = log.date.toDate().toISOString().split('T')[0]; } catch(e){}
+                    }
+                    userScores[log.userId].details.push(`${displayDate || 'N/A'}(${log.type}): ${log.details || ''} - ${log.score}分`);
+                });
+
+                // --- 生成 CSV 内容 ---
+                let csvContent = "\uFEFF"; // BOM for Excel UTF-8
+                csvContent += "工号,用户名,总分,平均分,日志条数,具体事项汇总\n";
+
+                for (const userId in userScores) {
+                    const userData = userScores[userId];
+                    const avgScore = (userData.totalScore / userData.logCount).toFixed(2);
+                    const detailsString = userData.details.join('; ');
+                    // 处理 CSV 特殊字符
+                    const safeName = `"${(userData.name || '').replace(/"/g, '""')}"`;
+                    const safeDetails = `"${detailsString.replace(/"/g, '""')}"`;
+                    csvContent += `${userId},${safeName},${userData.totalScore.toFixed(1)},${avgScore},${userData.logCount},${safeDetails}\n`;
+                }
+
+                // --- 触发下载 ---
+                const encodedUri = encodeURI(`data:text/csv;charset=utf-8,${csvContent}`);
+                const link = document.createElement("a");
+                link.setAttribute("href", encodedUri);
+                link.setAttribute("download", `评分报告_${startDateStr}_至_${endDateStr}.csv`);
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                showMessage('报告导出成功!', 'success');
+
+            } catch (error) {
+                console.error("导出报告出错:", error);
+                showMessage('导出报告时发生错误。', 'error');
+            } finally {
+                toggleLoader('export-loader', false);
+            }
+        }
+
+        // --- 管理员仪表盘逻辑 ---
+        async function renderAdminDashboard() {
+            if (!currentUser || currentUserRole !== 'admin') return;
+            console.log("渲染管理员仪表盘...");
+            // 并行加载数据
+            await Promise.all([
+                renderAdminUserList(),
+                renderAdminReviewerList(),
+                renderAdminWorkTypeList()
+            ]);
+             populateWorkTypeOptions(); // 确保权限模态框选项更新
+        }
+
+        // 加载并渲染用户列表 (管理员视图)
+        async function renderAdminUserList() {
+            adminUsersTableBody.innerHTML = '<tr><td colspan="3" class="text-center py-4 text-gray-500">正在加载用户列表...</td></tr>';
+            try {
+                const usersSnapshot = await db.collection('users').orderBy('name').get();
+                adminUserDataCache = usersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })); // 缓存数据
+
+                 if (adminUserDataCache.length === 0) {
+                     adminUsersTableBody.innerHTML = '<tr><td colspan="3" class="text-center py-4 text-gray-500">暂无用户</td></tr>';
+                    return;
+                }
+                 adminUsersTableBody.innerHTML = adminUserDataCache.map(user => `
+                    <tr>
+                        <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900">${user.name || 'N/A'}</td>
+                        <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-500">${user.employeeId || 'N/A'}</td>
+                        <td class="px-4 py-2 whitespace-nowrap text-sm font-medium">
+                            <button data-user-id="${user.id}" data-employee-id="${user.employeeId}" class="delete-user-btn text-red-600 hover:text-red-900">删除</button>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (error) {
+                console.error("加载用户列表出错:", error);
+                adminUsersTableBody.innerHTML = '<tr><td colspan="3" class="text-center py-4 text-gray-500">加载用户列表失败</td></tr>';
+            }
+        }
+
+        // 加载并渲染审查员列表 (管理员视图)
+        async function renderAdminReviewerList() {
+             adminReviewersTableBody.innerHTML = '<tr><td colspan="3" class="text-center py-4 text-gray-500">正在加载审查员列表...</td></tr>';
+             try {
+                const reviewersSnapshot = await db.collection('reviewers').orderBy('username').get();
+                adminReviewerDataCache = reviewersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })); // 缓存
+
+                 if (adminReviewerDataCache.length === 0) {
+                     adminReviewersTableBody.innerHTML = '<tr><td colspan="3" class="text-center py-4 text-gray-500">暂无审查员</td></tr>';
+                    return;
+                }
+                adminReviewersTableBody.innerHTML = adminReviewerDataCache.map(reviewer => `
+                    <tr>
+                        <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900">${reviewer.username || 'N/A'}</td>
+                        <td class="px-4 py-2 text-sm text-gray-500 max-w-xs truncate" title="${(reviewer.permissions || []).join(', ')}">${(reviewer.permissions || []).join(', ') || '无'}</td>
+                        <td class="px-4 py-2 whitespace-nowrap text-sm font-medium space-x-2">
+                            <button data-reviewer-uid="${reviewer.id}" data-username="${reviewer.username}" class="set-permission-btn text-blue-600 hover:text-blue-900">权限</button>
+                            <button data-reviewer-uid="${reviewer.id}" data-username="${reviewer.username}" class="delete-reviewer-btn text-red-600 hover:text-red-900">删除</button>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (error) {
+                console.error("加载审查员列表出错:", error);
+                adminReviewersTableBody.innerHTML = '<tr><td colspan="3" class="text-center py-4 text-gray-500">加载审查员列表失败</td></tr>';
+            }
+        }
+
+        // 加载并渲染工作类型列表 (管理员视图)
+        async function renderAdminWorkTypeList() {
+            adminWorkTypesTableBody.innerHTML = '<tr><td colspan="2" class="text-center py-4 text-gray-500">正在加载工作类型...</td></tr>';
+            // workTypes 应该已经由 loadInitialConfig 加载并排序
+            if (workTypes.length === 0) {
+                 adminWorkTypesTableBody.innerHTML = '<tr><td colspan="2" class="text-center py-4 text-gray-500">暂无工作类型</td></tr>';
+                return;
+            }
+            adminWorkTypesTableBody.innerHTML = workTypes.map(type => `
+                <tr>
+                    <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900">${type}</td>
+                    <td class="px-4 py-2 whitespace-nowrap text-sm font-medium">
+                        <button data-type-name="${type}" class="delete-work-type-btn text-red-600 hover:text-red-900">删除</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // 处理管理员删除用户
+        async function handleDeleteUser(userId, employeeId) {
+            if (!userId || !employeeId) {
+                console.error("删除用户时缺少必要 ID。");
+                return;
+            }
+            if (confirm(`确定要删除工号为 ${employeeId} 的用户吗？\n警告：此操作将删除 Firestore 中的用户记录和该用户的所有日志记录，但可能不会删除 Firebase Authentication 中的认证账户（需要后端或手动操作）。\n此操作不可恢复！`)) {
+                 const deleteButton = document.querySelector(`button[data-user-id="${userId}"]`);
+                 if(deleteButton) deleteButton.disabled = true; // 禁用按钮
+
+                 try {
+                     // 1. 删除 Firestore 'users' 集合中的文档
+                     await db.collection('users').doc(userId).delete();
+                     console.log(`用户文档 ${userId} 已从 Firestore 删除。`);
+
+                     // 2. 批量删除该用户 (按 employeeId) 的所有工作日志
+                     const logsQuery = db.collection('workLogs').where('userId', '==', employeeId);
+                     const logsSnapshot = await logsQuery.get();
+                     if (!logsSnapshot.empty) {
+                         const batch = db.batch();
+                         logsSnapshot.forEach(doc => batch.delete(doc.ref));
+                         await batch.commit();
+                         console.log(`已删除用户 ${employeeId} 的 ${logsSnapshot.size} 条日志记录。`);
+                     } else {
+                         console.log(`用户 ${employeeId} 没有日志记录需要删除。`);
+                     }
+
+                     // 3. **重要提示**: 删除 Firebase Auth 用户需要特殊处理
+                     console.warn(`Firestore 记录已删除。请注意：Firebase Auth 用户 ${userId} 可能仍然存在，需要通过 Firebase 控制台或后端 Admin SDK 手动删除以完全清理。`);
+
+                    showMessage(`用户 ${employeeId} 的 Firestore 记录已删除。`, 'success');
+                    // 刷新管理员界面用户列表
+                    await renderAdminUserList();
+
+                 } catch (error) {
+                     console.error("删除用户出错:", error);
+                     showMessage('删除用户时出错。请检查控制台获取详细信息。', 'error');
+                      if(deleteButton) deleteButton.disabled = false; // 出错时恢复按钮
+                 }
+            }
+        }
+
+        // 处理管理员添加审查员
+        async function handleAddReviewer(event) {
+            event.preventDefault();
+            toggleLoader('add-reviewer-loader', true);
+            const email = addReviewerForm.querySelector('#reviewer-email').value.trim();
+            const username = addReviewerForm.querySelector('#reviewer-username-display').value.trim() || email; // 如果没填显示名称，用邮箱代替
+            const password = addReviewerForm.querySelector('#reviewer-password').value;
+
+            if (!email || !password) { /* ... validation ... */ toggleLoader('add-reviewer-loader', false); return; }
+
+            // 检查邮箱是否已被任何角色使用 (Auth层面检查)
+            try {
+                // 1. 尝试在 Auth 中创建用户 (如果邮箱已存在会失败)
+                const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+                const reviewerUid = userCredential.user.uid;
+                console.log("审查员 Auth 账户创建成功:", reviewerUid);
+
+                // 2. 在 Firestore 'reviewers' 集合中添加记录
+                await db.collection('reviewers').doc(reviewerUid).set({
+                    username: username, // 存储显示名称或邮箱
+                    email: email, // 存储邮箱用于可能的查找
+                    permissions: [] // 初始权限为空
+                });
+                console.log("审查员信息已添加到 Firestore");
+
+                showMessage(`审查员 ${username} 添加成功!`, 'success');
+                addReviewerForm.reset();
+                await renderAdminReviewerList(); // 刷新列表
+
+            } catch (error) {
+                console.error("添加审查员失败:", error);
+                let message = `添加审查员失败: ${error.message}`;
+                 if (error.code === 'auth/email-already-in-use') {
+                    message = '该邮箱已被注册!';
+                } else if (error.code === 'auth/weak-password') {
+                    message = '密码太弱，请设置更强的密码。';
+                }
+                showMessage(message, 'error');
+                // 如果 Auth 创建失败，不需要手动清理 Firestore，因为还没写入
+            } finally {
+                toggleLoader('add-reviewer-loader', false);
+            }
+        }
+
+        // 处理管理员删除审查员
+        async function handleDeleteReviewer(reviewerUid, username) {
+             if (!reviewerUid) { console.error("删除审查员时缺少 UID。"); return; }
+             if (confirm(`确定要删除审查员 "${username}" 吗？\n警告：此操作将删除 Firestore 中的审查员记录，但可能不会删除 Firebase Authentication 中的认证账户。\n此操作不可恢复！`)) {
+                const deleteButton = document.querySelector(`button[data-reviewer-uid="${reviewerUid}"].delete-reviewer-btn`);
+                if(deleteButton) deleteButton.disabled = true;
+
+                try {
+                    // 1. 从 Firestore 'reviewers' 集合删除
+                    await db.collection('reviewers').doc(reviewerUid).delete();
+                    console.log(`审查员文档 ${reviewerUid} 已从 Firestore 删除。`);
+
+                    // 2. **重要提示**: 处理 Auth 用户删除
+                    console.warn(`Firestore 记录已删除。请注意：Firebase Auth 用户 ${reviewerUid} 可能仍然存在，需要通过 Firebase 控制台或后端 Admin SDK 手动删除以完全清理。`);
+
+                    showMessage(`审查员 ${username} 的 Firestore 记录已删除。`, 'success');
+                    await renderAdminReviewerList(); // 刷新列表
+
+                } catch (error) {
+                     console.error("删除审查员出错:", error);
+                     showMessage('删除审查员时出错。', 'error');
+                     if(deleteButton) deleteButton.disabled = false;
+                }
+            }
+        }
+
+
+        // 处理管理员添加工作类型
+        async function handleAddWorkType(event) {
+             event.preventDefault();
+             toggleLoader('add-type-loader', true);
+             const typeName = addWorkTypeForm.querySelector('#work-type-name').value.trim();
+
+             if (!typeName) { /* ... validation ... */ toggleLoader('add-type-loader', false); return; }
+             if (workTypes.includes(typeName)) { showMessage(`工作类型 "${typeName}" 已存在。`, 'error'); toggleLoader('add-type-loader', false); return; }
+
+             try {
+                 const workTypesRef = db.collection('config').doc('workTypes');
+                 // 使用 arrayUnion 原子性添加
+                 await workTypesRef.update({
+                     types: firebase.firestore.FieldValue.arrayUnion(typeName)
+                 });
+                 showMessage(`工作类型 "${typeName}" 添加成功!`, 'success');
+                 addWorkTypeForm.reset();
+                 // 重新加载配置并更新所有相关 UI
+                 await loadInitialConfig(); // 这会调用 populateWorkTypeOptions
+                 await renderAdminWorkTypeList();
+
+             } catch (error) {
+                 console.error("添加工作类型出错:", error);
+                 // 如果文档不存在，update 会失败，尝试 set
+                 if (error.code === 'not-found' || error.message.includes("No document to update")) {
+                     try {
+                         await db.collection('config').doc('workTypes').set({ types: [typeName] });
+                         showMessage(`工作类型 "${typeName}" 添加成功! (首次创建配置)`, 'success');
+                         addWorkTypeForm.reset();
+                         await loadInitialConfig();
+                         await renderAdminWorkTypeList();
+                     } catch (setError) {
+                         console.error("创建工作类型配置出错:", setError);
+                         showMessage('添加工作类型时发生错误。', 'error');
+                     }
+                 } else {
+                    showMessage('添加工作类型时发生错误。', 'error');
+                 }
+             } finally {
+                 toggleLoader('add-type-loader', false);
+             }
+        }
+
+        // 处理管理员删除工作类型
+         async function handleDeleteWorkType(typeName) {
+             if (!typeName) return;
+             if (confirm(`确定要删除工作类型 "${typeName}" 吗？\n这将同时从所有审查员的权限中移除此类型。`)) {
+                 const deleteButton = document.querySelector(`button[data-type-name="${typeName}"]`);
+                 if(deleteButton) deleteButton.disabled = true;
+
+                 try {
+                     const workTypesRef = db.collection('config').doc('workTypes');
+                     // 原子性移除
+                     await workTypesRef.update({
+                         types: firebase.firestore.FieldValue.arrayRemove(typeName)
+                     });
+
+                     // 批量更新审查员权限
+                     const reviewersQuery = db.collection('reviewers').where('permissions', 'array-contains', typeName);
+                     const reviewersSnapshot = await reviewersQuery.get();
+                     if (!reviewersSnapshot.empty) {
+                         const batch = db.batch();
+                         reviewersSnapshot.forEach(doc => {
+                             batch.update(doc.ref, {
+                                 permissions: firebase.firestore.FieldValue.arrayRemove(typeName)
+                             });
+                         });
+                         await batch.commit();
+                         console.log(`已从 ${reviewersSnapshot.size} 个审查员的权限中移除 ${typeName}`);
+                     }
+
+                    showMessage(`工作类型 "${typeName}" 已删除，相关权限已更新。`, 'success');
+                     // 重新加载配置并更新UI
+                    await loadInitialConfig();
+                    await renderAdminWorkTypeList();
+                    await renderAdminReviewerList();
+                    // 如果审查员界面可见，也需刷新
+                    if (currentUserRole === 'reviewer') { await renderReviewerDashboard(); }
+
+                 } catch (error) {
+                     console.error("删除工作类型出错:", error);
+                     showMessage('删除工作类型时出错。', 'error');
+                     if(deleteButton) deleteButton.disabled = false;
+                 }
+            }
+        }
+
+        // --- 权限模态框逻辑 ---
+        function renderPermissionCheckboxes(selectedPermissions = []) {
+             permissionCheckboxes.innerHTML = workTypes.map(type => `
+                <div class="flex items-center">
+                    <input id="perm-${type}-${generateId()}" name="permission" type="checkbox" value="${type}"
+                           ${selectedPermissions.includes(type) ? 'checked' : ''}
+                           class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                    <label for="perm-${type}-${generateId()}" class="ml-2 block text-sm text-gray-900">
+                        ${type}
+                    </label>
+                </div>
+            `).join('');
+             if (workTypes.length === 0) {
+                 permissionCheckboxes.innerHTML = '<p class="text-sm text-gray-500">暂无可分配的工作类型。</p>';
+             }
+        }
+
+        function openPermissionModal(reviewerUid, username) {
+            if (!reviewerUid || !username) { console.error("打开权限模态框缺少必要信息"); return; }
+            const reviewer = adminReviewerDataCache.find(r => r.id === reviewerUid); // 从缓存查找
+            if (!reviewer) { showMessage("未找到审查员信息。", "error"); return; }
+
+            modalReviewerName.textContent = username;
+            permissionModal.dataset.editingReviewerUid = reviewerUid; // 存储 UID
+            renderPermissionCheckboxes(reviewer.permissions || []);
+            permissionModal.classList.remove('hidden');
+        }
+
+        function closePermissionModal() {
+            permissionModal.classList.add('hidden');
+            permissionModal.dataset.editingReviewerUid = '';
+        }
+
+        async function handleSavePermissions() {
+            toggleLoader('save-permission-loader', true);
+            const reviewerUid = permissionModal.dataset.editingReviewerUid;
+            if (!reviewerUid) { /* ... error handling ... */ toggleLoader('save-permission-loader', false); return; }
+
+            const selectedPermissions = Array.from(permissionCheckboxes.querySelectorAll('input[name="permission"]:checked'))
+                                           .map(checkbox => checkbox.value);
+
+            try {
+                const reviewerRef = db.collection('reviewers').doc(reviewerUid);
+                await reviewerRef.update({
+                    permissions: selectedPermissions
+                });
+                showMessage(`权限已更新。`, 'success');
+                closePermissionModal();
+                // 刷新管理员界面的审查员列表和缓存
+                await renderAdminReviewerList();
+                // 如果当前登录的是被修改的审查员，刷新其仪表盘
+                 if (currentUserRole === 'reviewer' && currentUser?.uid === reviewerUid) {
+                     // 需要重新加载该审查员的详情以更新权限
+                     const updatedDoc = await reviewerRef.get();
+                     if(updatedDoc.exists) {
+                         currentUserDetails = { uid: reviewerUid, ...updatedDoc.data() };
+                         sessionStorage.setItem('currentUserDetails', JSON.stringify(currentUserDetails));
+                         await renderReviewerDashboard();
+                     }
+                 }
+            } catch (error) {
+                 console.error("保存权限出错:", error);
+                 showMessage('保存权限时发生错误。', 'error');
+            } finally {
+                toggleLoader('save-permission-loader', false);
+            }
+        }
+
+         // --- 修改密码模态框逻辑 (管理员用 - 不推荐直接修改密码) ---
+         // **警告**: 出于安全考虑，强烈建议移除此前端修改密码功能。
+         // 管理员应通过 Firebase 控制台重置密码，或使用后端 Admin SDK 实现安全的密码重置流程。
+         // 以下代码仅作保留，但不建议在生产环境使用。
+        function openChangePasswordModal(reviewerUid, username) {
+             showMessage("警告：不建议在前端直接修改密码，请考虑使用 Firebase 控制台或后端功能。", "error"); // 明确提示风险
+             if (!reviewerUid || !username) return;
+             modalChangePwdReviewerName.textContent = username;
+             changePwdReviewerUidInput.value = reviewerUid; // 存储 UID
+             changePasswordForm.reset();
+             changePasswordModal.classList.remove('hidden');
+        }
+
+        function closeChangePasswordModal() {
+            changePasswordModal.classList.add('hidden');
+            changePwdReviewerUidInput.value = '';
+        }
+
+        async function handleChangePassword_UNSAFE(event) {
+            event.preventDefault();
+            showMessage("警告：此密码修改方式不安全，仅用于演示。", "error");
+            toggleLoader('save-pwd-loader', true);
+            const reviewerUid = changePwdReviewerUidInput.value;
+            const newPassword = newPasswordInput.value;
+            const confirmNewPassword = confirmNewPasswordInput.value;
+
+            if (!reviewerUid || !newPassword || newPassword !== confirmNewPassword) {
+                 // ... validation messages ...
+                 toggleLoader('save-pwd-loader', false);
+                 return;
+            }
+
+            // **极不安全的操作 - 仅作演示**
+            // 实际应用中绝不能在前端直接更新密码哈希，也无法直接调用 Auth 的 updatePassword
+            // 需要后端 Cloud Function 配合 Admin SDK 来实现管理员重置密码
+            showMessage("功能未安全实现。请使用 Firebase 控制台重置密码。", "error");
+            console.error("Attempted unsafe password change from frontend.");
+            toggleLoader('save-pwd-loader', false);
+            // try {
+            //     // 无法直接更新 Auth 密码，也绝不能更新 Firestore 中的模拟哈希
+            //     // const reviewerRef = db.collection('reviewers').doc(reviewerUid);
+            //     // await reviewerRef.update({ password: "some_new_unsafe_hash" }); // 错误做法
+            //     showMessage(`密码更新功能需要后端支持以确保安全。`, 'error');
+            //     closeChangePasswordModal();
+            // } catch (error) { /* ... */ }
+            // finally { toggleLoader('save-pwd-loader', false); }
+        }
+
+
+        // --- Event Listeners Setup ---
+        function setupEventListeners() {
+            console.log("正在设置事件监听器...");
+
+            // 视图切换按钮
+            showRegisterBtn?.addEventListener('click', showRegisterView);
+            showLoginBtn?.addEventListener('click', showLoginView);
+
+            // 表单提交
+            loginForm?.addEventListener('submit', handleLogin);
+            registerForm?.addEventListener('submit', handleRegister);
+            logSubmissionForm?.addEventListener('submit', handleLogSubmit);
+            exportForm?.addEventListener('submit', handleExport);
+            addReviewerForm?.addEventListener('submit', handleAddReviewer);
+            addWorkTypeForm?.addEventListener('submit', handleAddWorkType);
+            // changePasswordForm?.addEventListener('submit', handleChangePassword_UNSAFE); // 禁用不安全的密码修改
+
+            // 登出按钮
+            userLogoutBtn?.addEventListener('click', handleLogout);
+            reviewerLogoutBtn?.addEventListener('click', handleLogout);
+            adminLogoutBtn?.addEventListener('click', handleLogout);
+
+            // 模态框按钮
+            closeModalBtn?.addEventListener('click', closePermissionModal);
+            savePermissionsBtn?.addEventListener('click', handleSavePermissions);
+            closePwdModalBtn?.addEventListener('click', closeChangePasswordModal);
+
+            // 事件委托处理动态按钮 (例如表格中的删除/编辑按钮)
+            document.body.addEventListener('click', (event) => {
+                const target = event.target;
+
+                // 审查员提交评分
+                if (target.matches('.submit-score-btn')) {
+                    event.preventDefault(); // 防止可能的默认行为
+                    const logId = target.dataset.logId;
+                    const scoreInput = document.getElementById(`score-${logId}`);
+                    if (logId && scoreInput) {
+                        handleScoreSubmit(logId, scoreInput.value);
+                    } else {
+                        console.error("无法找到评分按钮对应的 logId 或输入框");
+                    }
+                }
+                // 管理员删除用户
+                else if (target.matches('.delete-user-btn')) {
+                     event.preventDefault();
+                     const userId = target.dataset.userId; // Auth UID
+                     const employeeId = target.dataset.employeeId;
+                     if (userId && employeeId) {
+                        handleDeleteUser(userId, employeeId);
+                     } else {
+                         console.error("删除用户按钮缺少 user-id 或 employee-id");
+                     }
+                }
+                 // 管理员删除审查员
+                else if (target.matches('.delete-reviewer-btn')) {
+                     event.preventDefault();
+                     const reviewerUid = target.dataset.reviewerUid;
+                     const username = target.dataset.username;
+                      if (reviewerUid && username) {
+                        handleDeleteReviewer(reviewerUid, username);
+                     } else {
+                         console.error("删除审查员按钮缺少 reviewer-uid 或 username");
+                     }
+                }
+                 // 管理员删除工作类型
+                else if (target.matches('.delete-work-type-btn')) {
+                     event.preventDefault();
+                     const typeName = target.dataset.typeName;
+                     if (typeName) {
+                        handleDeleteWorkType(typeName);
+                     } else {
+                          console.error("删除工作类型按钮缺少 type-name");
+                     }
+                }
+                // 管理员打开权限设置模态框
+                else if (target.matches('.set-permission-btn')) {
+                     event.preventDefault();
+                     const reviewerUid = target.dataset.reviewerUid;
+                     const username = target.dataset.username;
+                     if (reviewerUid && username) {
+                        openPermissionModal(reviewerUid, username);
+                     } else {
+                         console.error("设置权限按钮缺少 reviewer-uid 或 username");
+                     }
+                }
+                // 管理员打开修改密码模态框 (已注释掉不安全版本)
+                // else if (target.matches('.change-password-btn')) {
+                //      event.preventDefault();
+                //      const reviewerUid = target.dataset.reviewerUid;
+                //      const username = target.dataset.username;
+                //      if (reviewerUid && username) {
+                //         openChangePasswordModal(reviewerUid, username);
+                //      } else {
+                //           console.error("修改密码按钮缺少 reviewer-uid 或 username");
+                //      }
+                // }
+            });
+
+            console.log("事件监听器设置完成。");
+        }
+
+        // --- Initial Load ---
+        // 使用 DOMContentLoaded 确保 HTML 加载完毕再执行脚本
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log("DOM 已加载，开始初始化应用...");
+            // Firebase 初始化已在顶部完成
+            // onAuthStateChanged 会自动处理初始登录状态检查和导航
+            // 需要尽早加载配置数据
+            // loadInitialConfig(); // 移到 onAuthStateChanged 成功获取角色后加载
+            setupEventListeners(); // 设置事件监听器
+            console.log("应用初始化流程启动（等待认证状态...）。");
+            // 初始显示登录视图，onAuthStateChanged 会根据登录状态切换
+            showLoginView();
+        });
+
+    </script>
+
+</body>
+</html>
